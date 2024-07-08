@@ -69,6 +69,10 @@ function SDC.DD(Type, Info)
   if Type == 10 then
     Table[1] = GetString(SI_TRADESKILLRESULT142)
   end
+--Warning_Set_Not_Unlocked: nil
+  if Type == 10.5 then
+    Table[1] = GetString(SI_GAMEPAD_MARKET_LOCKED_TITLE).." -> "..Info[1]
+  end
 --Warning_Alchemy_Quest_BanList: ItemLink
   if Type == 11 then
     Table[1] = GetString(SI_GUILD_RECRUITMENT_CATEGORY_BLACKLIST).." -> "..Info[1]

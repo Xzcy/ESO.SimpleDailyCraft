@@ -159,7 +159,6 @@ function SDC.MostBasicStyle(Need)
     end
   end
   if count < Need then
-    
     return 0, 0
   end
   return style, count
@@ -168,7 +167,15 @@ end
 --Smith
 function SDC.HandleSmith(IsMaster, a, b)
   local _
-  local Tep = {}
+  local Tep = {--[[
+    1 = patternIndex, 
+    2 = materialIndex,
+    3 = materialQuantity,
+    4 = itemStyleId,
+    5 = traitIndex,
+    6 = useUniversalStyleItem,
+    7 = num to craft,
+  ]]}
   local CraftType = 0
   local SetIndex = 0
   local SetId = 0
@@ -187,6 +194,11 @@ function SDC.HandleSmith(IsMaster, a, b)
     if ZO_Smithing_IsConsolidatedStationCraftingMode() == false then return end
     _, MaterialId, CraftType, Quality, ItemTep, SetId, TraitType, Tep[4] = GetQuestConditionMasterWritInfo(a, 1, b)
     SetIndex = CONSOLIDATED_SMITHING_SET_DATA_MANAGER.setDataBySetId[SetId].setIndex
+    --Set Is Locked
+    if not IsConsolidatedSmithingSetIndexUnlocked(SetIndex) then
+      SDC.DD(10.5, {GetItemSetName(SetId)})
+      return
+    end
     SetActiveConsolidatedSmithingSetByIndex(SetIndex)
     Tep[1], Tep[2], TargetItem = GetSmithingPatternInfoForItemSet(ItemTep, SetId, MaterialId, TraitType)
     Tep[5] = TraitType + 1
@@ -203,7 +215,8 @@ function SDC.HandleSmith(IsMaster, a, b)
   Tep[3] = select(3, GetSmithingPatternMaterialItemInfo(Tep[1], Tep[2]))
   Tep[6] = false
   
-  table.insert(SDC.CraftList, {
+  table.insert(SDC.CraftList, 
+    {
     ["Type"] = CraftType,
     ["IsMaster"] = IsMaster,
     ["Master"] = {
@@ -215,7 +228,8 @@ function SDC.HandleSmith(IsMaster, a, b)
       ["Quality"] = Quality,
     },
     ["Craft"] = Tep,
-  })
+    }
+    )
 end
 
 --Alchemy
@@ -238,11 +252,13 @@ function SDC.HandleAlchemy(IsMaster, a, b)
   end
   Tep[1] = SDC.Alchemy["Level"][Material]
 
-  table.insert(SDC.CraftList ,{
-      ["Type"] = CraftType,
-      ["IsMaster"] = IsMaster,
-      ["Craft"] = Tep,
-  })
+  table.insert(SDC.CraftList,
+    {
+    ["Type"] = CraftType,
+    ["IsMaster"] = IsMaster,
+    ["Craft"] = Tep,
+    }
+  )
 end
 
 --Enchat
@@ -267,11 +283,13 @@ function SDC.HandleEnchant(IsMaster, a, b)
   Tep[2] = SDC.Enchant["Id"][Target][2]
   Tep[1] = SDC.Enchant["Level"][Meterial][SDC.Enchant["Id"][Target][1]]
   Tep[3] = SDC.Enchant["Quilty"][Quality]
-  table.insert(SDC.CraftList,{
-      ["Type"] = CraftType,
-      ["IsMaster"] = IsMaster,
-      ["Craft"] = Tep,
-  })
+  table.insert(SDC.CraftList,
+    {
+    ["Type"] = CraftType,
+    ["IsMaster"] = IsMaster,
+    ["Craft"] = Tep,
+    }
+  )
 end
 
 --Cook
@@ -306,11 +324,13 @@ function SDC.HandleCook(IsMaster, a, b)
     if CraftType == 0 then return end
     Tep[1], Tep[2] = unpack(Recipes[Target])
   end
-  table.insert(SDC.CraftList,{
+  table.insert(SDC.CraftList,
+    {
     ["Type"] = CraftType,
     ["IsMaster"] = IsMaster,
     ["Craft"] = Tep,
-  })
+    }
+  )
 end
 
 --Which function to handle craft info

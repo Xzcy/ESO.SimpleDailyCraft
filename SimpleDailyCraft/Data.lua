@@ -5,7 +5,7 @@ local SDC = SimpleDailyCraft
 SDC.name = "SimpleDailyCraft"
 SDC.title = "SimpleDailyCraft"
 SDC.author = "@MelanAster"
-SDC.version = "0.73"
+SDC.version = "0.74"
 
 --Part of data of alchemy
 SDC.Alchemy = {
