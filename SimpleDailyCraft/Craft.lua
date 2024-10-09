@@ -434,26 +434,28 @@ end
 
 --Materila saving skill id
 local SkillTable = {
-  [1] = {8, 1, 6, 3}, --Black
-  [2] = {8, 6, 6, 3}, --Cloth
-  [6] = {8, 4, 6, 3}, --Wood
-  [7] = {8, 7, 5, 3}, --Jewlery
+  [1] = {48166  , 3}, --Black
+  [2] = {48196  , 3}, --Cloth
+  [6] = {48175  , 3}, --Wood
+  [7] = {103646 , 3}, --Jewlery
   
-  [4.1] = {8, 3, 4, 3}, --Alchemy
-  [4.2] = {8, 3, 5, 0}, --Alchemy
-  [4.3] = {8, 3, 1, 8}, --Alchemy
+  [4.1] = {45577, 3}, --Alchemy
+  [4.2] = {45555, 0}, --Alchemy
+  [4.3] = {45542, 8}, --Alchemy
   
-  [5.1] = {8, 5, 5, 3}, --Cook
-  [5.2] = {8, 5, 6, 3}, --Cook
+  [5.1] = {44616, 3}, --Cook
+  [5.2] = {44620, 3}, --Cook
 }
 
 --For master writ check, saving materials
-function SDC.SKillCheck(Type)
-  local abilityId = SkillTable[Type]
-  if select(8, GetSkillAbilityInfo(unpack(abilityId))) ~= abilityId[4] or not IsSkillAbilityPurchased(unpack(abilityId)) then
+function SDC.SKillCheck(Job)
+  local AbilityId = SkillTable[Job][1]
+  local Require = SkillTable[Job][2]
+  local Type, Line, Index = GetSpecificSkillAbilityKeysByAbilityId(AbilityId)
+  if select(8, GetSkillAbilityInfo(Type, Line, Index)) ~= Require or not IsSkillAbilityPurchased(Type, Line, Index) then
     SDC.CraftList["Stop"] = true
-    local Name = select(1, GetSkillAbilityInfo(unpack(abilityId)))
-    SDC.DD(2, {Name:gsub("%^.+", "")})
+    local Name = select(1, GetSkillAbilityInfo(Type, Line, Index))
+    SDC.DD(2, {"|H1:ability:"..AbilityId.."|h|h"})
     return true
   end
   return false

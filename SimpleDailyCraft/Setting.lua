@@ -94,7 +94,8 @@ function SDC.BuildMenu()
 	local options = {
     { --Account/Character setting
 		type = "checkbox",
-		name = GetString(SI_ADDON_MANAGER_CHARACTER_SELECT_LABEL)..GetString(SI_CURRENCYLOCATION3).." -> "..GetString(SI_CURRENCYLOCATION0),
+		name = GetString(SI_ADDON_MANAGER_CHARACTER_SELECT_LABEL)..GetString(SI_CURRENCYLOCATION3).." / "..GetString(SI_CURRENCYLOCATION0),
+    tooltip = GetString(SI_CHECK_BUTTON_OFF)..": "..GetString(SI_CURRENCYLOCATION3).."\r\n"..GetString(SI_CHECK_BUTTON_ON)..": "..GetString(SI_CURRENCYLOCATION0),
 		getFunc = function() return SDC.SV2.CV end,
 		setFunc = function(var)
       SDC.SV2.CV = var
@@ -179,7 +180,7 @@ function SDC.BuildMenu()
     
     { --Quest
     type = "submenu", 
-		name = GetString(SI_BUGCATEGORY6),
+		name = GetString(SI_COLLECTIBLE_ACTION_ACCEPT_QUEST),
     reference = "SDC_Quest",
 		controls = {
         { --QuestAuto
