@@ -1,11 +1,40 @@
 --NameSpace
 SimpleDailyCraft = {}
---Basic info
 local SDC = SimpleDailyCraft
+
+--Basic info
 SDC.name = "SimpleDailyCraft"
 SDC.title = "SimpleDailyCraft"
 SDC.author = "@MelanAster"
-SDC.version = "0.75"
+SDC.version = "0.76"
+
+--Constant
+SDC.C = {
+  --Craft Type
+  CRAFT_TYPE_BLACKSMITH       = 1,
+  CRAFT_TYPE_CLOTH            = 2,
+  CRAFT_TYPE_ENCHANT          = 3,
+  CRAFT_TYPE_ALCHEMY          = 4,
+  CRAFT_TYPE_COOK             = 5,
+  CRAFT_TYPE_WOOD             = 6,
+  CRAFT_TYPE_JEWLERY          = 7,
+  CRAFT_TYPE_NUMBER           = 7,
+  --Miscellaneous
+  NonUniversalStyle           = false,
+  MAX_NUMBER_QUEST            = 25,
+  QUEST_TYPE_WRIT             = 4,
+  MAX_NUMBER_CONDITION_INDEX  = 6,
+}
+
+--Tool Functions
+SDC.TF = {
+  --Number of item still needed for writ requirements
+  MissedWritItemNumber = function(journalQuestIndex, conditionIndex)
+    local stepIndex = 1
+    local current, need = GetJournalQuestConditionValues(journalQuestIndex, stepIndex, conditionIndex)
+    return need - current
+  end,
+}
 
 --Part of data of alchemy
 SDC.Alchemy = {

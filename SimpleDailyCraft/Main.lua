@@ -1,28 +1,29 @@
 local SDC = SimpleDailyCraft
+
 --Dault setting
 SDC.Default = {
+  --Account/Character Setting
   CV = false,
-  
+  --Writs Bar Setting
   Window_Show = true,
   Window_Point = 128,
   Window_rPoint = 128,
   Window_OffsetX = 0,
   Window_OffsetY = 0,
-  
+  --Craft Setting
   DailyCraft = true,
   MasterCraft = true,
-  
   SmithCraft = true,
   CookCraft = true,
   EnchantCraft = true,
   AlchemyCraft = true,
-  
+  --Prompt Setting
   DD_SmithMaterialLeft = 200,
   DD_AlchemyCost = true,
   DD_Research = true,
   DD_Bank = false,
   DD_Announce = false,
-  
+  --Quest Setting
   QuestAuto = true,
   QuestDelay = 200,
   BQ = true,
@@ -32,21 +33,22 @@ SDC.Default = {
   PQ = true,
   EQ = true,
   AQ = true,
-  
+  --Unbox Setting
   OpenBox = true,
   OpenAnniversary = false,
-  
+  --Bank Setting
   Bank = true,
   OpenBank = false,
   OpenBankAssistant = true,
   CloseBank = true,
-  
+  --Restrict for Alchemy Setting
   DailyRestrict = {},
   DailyRawRestrict = {},
   MasterRestrict = {},
-  
+  --Style Materials Setting
   StyleList = {},
 }
+
 --Tool function
 local function ToLink(Id)
   return "|H0:item:"..Id..":30:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h"
@@ -79,8 +81,10 @@ local function OnAddOnLoaded(eventCode, addonName)
     SDC.SV.Window_OffsetX,
     SDC.SV.Window_OffsetY
   )
+  
   --Initialization for box name
   SDC.IsHaveName = SDC.ToStringTable(SDC.BoxId)
+  
   --Disable anniversary unbox when set
   if not SDC.SV.OpenAnniversary then SDC.IsHaveName[GetItemLinkName(SDC.BoxId[1]):gsub("%^.+", ""):lower()] = false end 
   
@@ -117,18 +121,20 @@ local function OnAddOnLoaded(eventCode, addonName)
 
   --LAM
   SDC.BuildMenu()
+  
   --Gamepad
   SDC.GamepadMode()
 end
 
 --Setting
 function SDC.SwitchSV()
-  --Account/Character
+  --Account/Character Switch
   if SDC.SV2.CV then
     SDC.SV = SDC.SV2
   else
     SDC.SV = SDC.SV1
   end
+
   --The first time dauf setting
   if SDC.SV.DailyRestrict[1] == nil then SDC.SV.DailyRestrict = {30152, 30164, 139019, 150731, 150671} end
   if SDC.SV.DailyRawRestrict[1] == nil then SDC.SV.DailyRawRestrict = {"%/"} end
@@ -149,159 +155,178 @@ function SDC.MostBasicStyle(Need)
   Need = Need or 0
   local count = -1
   local style = 0
+  
+  --Find the one with the most material in the available styles
   for StyleIndex, ItemId in pairs(SDC.SV.StyleList) do
-    if ItemId ~= nil and IsSmithingStyleKnown(StyleIndex, 1) then --IsKnown
+    --Known Sytle
+    if ItemId ~= nil and IsSmithingStyleKnown(StyleIndex, 1) then 
       local stack = GetCurrentSmithingStyleItemCount(StyleIndex)
-      if stack > count then --the largest number
+      --the largest number
+      if stack > count then 
         style = StyleIndex
         count = stack
       end
     end
   end
+  
+  --Not Enough
   if count < Need then
     return 0, 0
   end
+  
+  --Enough
   return style, count
 end
 
---Smith
-function SDC.HandleSmith(IsMaster, a, b)
-  local _
-  local Tep = {--[[
-    1 = patternIndex, 
-    2 = materialIndex,
-    3 = materialQuantity,
-    4 = itemStyleId,
-    5 = traitIndex,
-    6 = useUniversalStyleItem,
-    7 = num to craft,
-  ]]}
+--Gears Craft
+function SDC.HandleSmith(IsMaster, journalQuestIndex, conditionIndex)
   local CraftType = 0
-  local SetIndex = 0
-  local SetId = 0
+  local ItemId, ItemTemplateId = 0, 0
+  local PatternIndex, PatternCost = 0, 0
+  local MaterialId, MaterialIndex = 0, 0
+  local SetId, SetIndex = 0, 0
+  local TraitType, TraitIndex = 0, 0
+  local StyleId = 0
   local Quality = 1
-  local ItemId = 0
-  local ItemTep = 0
-  local MaterialId = 0
-  local TraitType = 0
-  local TargetItem = 0
   
-  local current, need = GetJournalQuestConditionValues(a, 1, b) 
-  Tep[7] = need - current
-  if Tep[7] == 0 then return end --Finished
+  --Already Finished?
+  local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
+    --Finished
+  if MissedItemNumber == 0 then return end
   
-  if IsMaster then --Is master writ？
+  --Is master writ？
+  if IsMaster then 
+  --Master Writs
+    --Master Stations?
     if ZO_Smithing_IsConsolidatedStationCraftingMode() == false then return end
-    _, MaterialId, CraftType, Quality, ItemTep, SetId, TraitType, Tep[4] = GetQuestConditionMasterWritInfo(a, 1, b)
+    
+    --Info of Target Item
+    ItemId, MaterialId, CraftType, Quality, ItemTemplateId, SetId, TraitType, StyleId = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, conditionIndex)
     SetIndex = CONSOLIDATED_SMITHING_SET_DATA_MANAGER.setDataBySetId[SetId].setIndex
-    --Set Is Locked
+    
+    --Set Locked
     if not IsConsolidatedSmithingSetIndexUnlocked(SetIndex) then
       SDC.DD(10.5, {GetItemSetName(SetId)})
       return
     end
+    
+    --Switch Active Set
     SetActiveConsolidatedSmithingSetByIndex(SetIndex)
-    Tep[1], Tep[2], TargetItem = GetSmithingPatternInfoForItemSet(ItemTep, SetId, MaterialId, TraitType)
-    Tep[5] = TraitType + 1
+    
+    --Other Info Required for Production
+    PatternIndex, MaterialIndex, ItemId = GetSmithingPatternInfoForItemSet(ItemTemplateId, SetId, MaterialId, TraitType)
+    TraitIndex = TraitType + 1
   else
-    ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(a, 1, b)
-    Tep[1], Tep[2] = GetSmithingPatternInfoForItemId(ItemId, MaterialId, CraftType)
-    Tep[4] = SDC.MostBasicStyle(Tep[7])
-    Tep[5] = 1
+  --Daily Writs
+    ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
+    PatternIndex, MaterialIndex = GetSmithingPatternInfoForItemId(ItemId, MaterialId, CraftType)
+    StyleId = SDC.MostBasicStyle(MissedItemNumber)
+    TraitIndex = 1
   end
-  if Tep[4] == 0 and CraftType ~= 7 then --No style can use when not jewerly
+  
+  --No style can use when not jewerly
+  if StyleId == 0 and CraftType ~= SDC.C.CRAFT_TYPE_JEWLERY then 
     SDC.DD(10, {})
     return 
-  end 
-  Tep[3] = select(3, GetSmithingPatternMaterialItemInfo(Tep[1], Tep[2]))
-  Tep[6] = false
+  end
   
+  --Raw Materials Needed for this kind of Gear
+  PatternCost = select(3, GetSmithingPatternMaterialItemInfo(PatternIndex, MaterialIndex))
+  
+  --Packaging Production Information
   table.insert(SDC.CraftList, 
     {
-    ["Type"] = CraftType,
-    ["IsMaster"] = IsMaster,
-    ["Master"] = {
-      ["SetIndex"] = SetIndex,
-      ["Target"] = TargetItem,
-      ["Material"] = MaterialId,
-      ["Trait"] = TraitType,
-      ["Style"] = Tep[4],
-      ["Quality"] = Quality,
-    },
-    ["Craft"] = Tep,
+      ["Type"] = CraftType,
+      ["IsMaster"] = IsMaster,
+      ["Master"] = {
+        ["Target"]    = ItemId,
+        ["Material"]  = MaterialId,
+        ["SetIndex"]  = SetIndex,
+        ["Trait"]     = TraitType,
+        ["Style"]     = StyleId,
+        ["Quality"]   = Quality,
+      },
+      ["Craft"] = {PatternIndex, MaterialIndex, PatternCost, StyleId, TraitIndex, SDC.C.NonUniversalStyle, MissedItemNumber},
     }
-    )
+  )
 end
 
 --Alchemy
-function SDC.HandleAlchemy(IsMaster, a, b)
+function SDC.HandleAlchemy(IsMaster, journalQuestIndex, conditionIndex)
   local _
-  local Tep = {}
   local CraftType = 0
-  local Material = 0
+  local SolventId, SolventIndex, ItemId = 0, 0, 0
   
-  local current, need = GetJournalQuestConditionValues(a, 1, b)
-  Tep[3] = need - current
-  if Tep[3] == 0 then return end
+  --Already Finished?
+  local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
+    --Finished
+  if MissedItemNumber == 0 then return end
   
+  --Is master writ？
   if IsMaster then
-    _, Material, CraftType, _,_,_,_,_, Tep[2] = GetQuestConditionMasterWritInfo(a, 1, b)
-    if CraftType == 0 then return end
+  --Master Writ
+    _, SolventIndex, CraftType, _,_,_,_,_, ItemId = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, conditionIndex)
   else
-    Tep[2], Material, CraftType = GetQuestConditionItemInfo(a, 1, b)
-    if CraftType == 0 then return end
+  --Daily Writ
+    ItemId, SolventIndex, CraftType = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
   end
-  Tep[1] = SDC.Alchemy["Level"][Material]
+  
+  --Which Solvent?
+  SolventId = SDC.Alchemy["Level"][SolventIndex]
 
+  --Packaging Production Information
   table.insert(SDC.CraftList,
     {
-    ["Type"] = CraftType,
-    ["IsMaster"] = IsMaster,
-    ["Craft"] = Tep,
+      ["Type"] = CraftType,
+      ["IsMaster"] = IsMaster,
+      ["Craft"] = {SolventId, ItemId, MissedItemNumber},
     }
   )
 end
 
 --Enchat
-function SDC.HandleEnchant(IsMaster, a, b)
-  local Tep = {}
+function SDC.HandleEnchant(IsMaster, journalQuestIndex, conditionIndex)
   local CraftType = 0
-  local Target = 0
-  local Meterial = 0
-  local Quality = 1
+  local ItemId, MeterialIndex, Quality = 0, 0, 1
+  local RunePotency, RuneEssence, RuneAspect = 0, 0, 0
   
-  local current, need = GetJournalQuestConditionValues(a, 1, b)
-  Tep[4] = need - current
-  if Tep[4] == 0 then return end
+  --Already Finished?
+  local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
+    --Finished
+  if MissedItemNumber == 0 then return end
   
+  --Is master writ？
   if IsMaster then
-    Target, Meterial, CraftType, Quality = GetQuestConditionMasterWritInfo(a, 1, b)
-    if CraftType == 0 then return end
+  --Master Writ
+    ItemId, MeterialIndex, CraftType, Quality = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, conditionIndex)
   else
-    Target, Meterial, CraftType, Quality = GetQuestConditionItemInfo(a, 1, b)
-    if CraftType == 0 then return end
+  --Daily Writ
+    ItemId, MeterialIndex, CraftType, Quality = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
   end
-  Tep[2] = SDC.Enchant["Id"][Target][2]
-  Tep[1] = SDC.Enchant["Level"][Meterial][SDC.Enchant["Id"][Target][1]]
-  Tep[3] = SDC.Enchant["Quilty"][Quality]
+  
+  --To Rune ItemId
+  RuneEssence = SDC.Enchant["Id"][ItemId][2]
+  RunePotency = SDC.Enchant["Level"][MeterialIndex][SDC.Enchant["Id"][ItemId][1]]
+  RuneAspect  = SDC.Enchant["Quilty"][Quality]
+  
+  --Packaging Production Information
   table.insert(SDC.CraftList,
     {
-    ["Type"] = CraftType,
-    ["IsMaster"] = IsMaster,
-    ["Craft"] = Tep,
+      ["Type"] = CraftType,
+      ["IsMaster"] = IsMaster,
+      ["Craft"] = {RunePotency, RuneEssence, RuneAspect, MissedItemNumber},
     }
   )
 end
 
 --Cook
 local Recipes = {} --All Recipes info
-
-function SDC.HandleCook(IsMaster, a, b)
-  local Tep = {}
-  local CraftType = 0
-  if Recipes[33526] == nil then --The first time run
+function SDC.HandleCook(IsMaster, journalQuestIndex, conditionIndex)
+  --Get recipe info when first run
+  if Recipes[33526] == nil then 
     for x = 1, 40 do
       for y = 1, 1000 do
-        local TargetId = select(8, GetRecipeInfo(x, y)) --Get recipe info (index, index)
+        local TargetId = select(8, GetRecipeInfo(x, y))
         if TargetId == 0 then
           break
         else
@@ -311,57 +336,83 @@ function SDC.HandleCook(IsMaster, a, b)
     end
   end
   
-  local current, need = GetJournalQuestConditionValues(a, 1, b)
-  Tep[3] = need - current
-  if Tep[3] == 0 then return end
+  local _
+  local CraftType = 0
+  local ItemId, RecipeListIndex, RecipeIndex = 0, 0, 0
   
+  --Already Finished?
+  local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
+    --Finished
+  if MissedItemNumber == 0 then return end
+  
+  --Is master writ？
   if IsMaster then
-    local Target, _, CraftType = GetQuestConditionMasterWritInfo(a, 1, b)
-    if CraftType == 0 then return end
-    Tep[1], Tep[2] = unpack(Recipes[Target])
+  --Master Writs
+    ItemId, _, CraftType = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, conditionIndex)
   else
-    local Target, _, CraftType = GetQuestConditionItemInfo(a, 1, b)
-    if CraftType == 0 then return end
-    Tep[1], Tep[2] = unpack(Recipes[Target])
+  --Daily Writs
+    ItemId, _, CraftType = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
   end
+  
+  --To Recipe Info
+    RecipeListIndex, RecipeIndex = unpack(Recipes[ItemId])
+  
   table.insert(SDC.CraftList,
     {
-    ["Type"] = CraftType,
-    ["IsMaster"] = IsMaster,
-    ["Craft"] = Tep,
+      ["Type"] = CraftType,
+      ["IsMaster"] = IsMaster,
+      ["Craft"] = {RecipeListIndex, RecipeIndex, MissedItemNumber},
     }
   )
 end
 
 --Which function to handle craft info
-local function HandleFunction(CraftType, IsMaster, a, b)
+local function HandleFunction(CraftType, IsMaster, journalQuestIndex, conditionIndex)
   if not SDC.SV.DailyCraft and not IsMaster then return end     --Ban daily craft
   if not SDC.SV.MasterCraft and IsMaster then return end        --Ban master craft
-  if CraftType == 3 and not SDC.SV.EnchantCraft then return end --Ban Enchant craft
-  if CraftType == 4 and not SDC.SV.AlchemyCraft then return end --Ban Alchemy craft
-  if CraftType == 5 and not SDC.SV.CookCraft then return end    --Ban Cook craft
   
-  if CraftType == 3 then SDC.HandleEnchant(IsMaster, a, b) return end
-  if CraftType == 4 then SDC.HandleAlchemy(IsMaster, a, b) return end
-  if CraftType == 5 then SDC.HandleCook(IsMaster, a, b) return end
+  if CraftType == SDC.C.CRAFT_TYPE_ENCHANT and not SDC.SV.EnchantCraft then return end --Ban Enchant craft
+  if CraftType == SDC.C.CRAFT_TYPE_ALCHEMY and not SDC.SV.AlchemyCraft then return end --Ban Alchemy craft
+  if CraftType == SDC.C.CRAFT_TYPE_COOK    and not SDC.SV.CookCraft then return end    --Ban Cook craft
   
-  if not SDC.SV.SmithCraft then return end                      --Ban Smith craft
-  SDC.HandleSmith(IsMaster, a, b)
+  if CraftType == SDC.C.CRAFT_TYPE_ENCHANT then SDC.HandleEnchant(IsMaster, journalQuestIndex, conditionIndex) return end
+  if CraftType == SDC.C.CRAFT_TYPE_ALCHEMY then SDC.HandleAlchemy(IsMaster, journalQuestIndex, conditionIndex) return end
+  if CraftType == SDC.C.CRAFT_TYPE_COOK    then SDC.HandleCook   (IsMaster, journalQuestIndex, conditionIndex) return end
+  
+  --Ban Smith craft
+  if not SDC.SV.SmithCraft then return end      SDC.HandleSmith  (IsMaster, journalQuestIndex, conditionIndex)
 end
 
 --To find the craft writ for current station
 function SDC.QuestCheck(CurrentType)
+  --Reset the List for Crafting
   SDC.CraftList = {}
-  for a = 1, 25 do  --Look up all journal quests
-    local Type = select(10, GetJournalQuestInfo(a))  
-    if Type == 4 then -- Craft quests
-      if GetQuestConditionMasterWritInfo(a, 1, 1) then --Master Writ
-        local _,_, CraftType = GetQuestConditionMasterWritInfo(a, 1, 1)
-        if CraftType == CurrentType then HandleFunction(CraftType, true, a, 1) end
+  
+  --Look up all journal quests
+  for journalQuestIndex = 1, SDC.C.MAX_NUMBER_QUEST do
+    local QuestType = select(10, GetJournalQuestInfo(journalQuestIndex))
+    
+    --Craft Quests
+    if QuestType == SDC.C.QUEST_TYPE_WRIT then
+      if GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1) then
+      --Master Writs
+        local _,_, CraftType = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1)
+        --Should be Handled in this Station?
+        if CraftType == CurrentType then
+          HandleFunction(CraftType, true, journalQuestIndex, 1) 
+        end
+      
       else
-        for b = 1, 6 do --Normal daily craft
-          local ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(a, 1, b)
-          if CraftType == CurrentType then HandleFunction(CraftType, false, a, b) end
+      --Daily Writs
+        for conditionIndex = 1, SDC.C.MAX_NUMBER_CONDITION_INDEX do
+          local ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
+          --Should be Handled in this Station?
+          if CraftType == CurrentType then 
+            --Patch for Raw Materials of Enchant and Alchemy
+            if MaterialId ~= 0 or (CraftType ~= SDC.C.CRAFT_TYPE_ENCHANT and CraftType ~= SDC.C.CRAFT_TYPE_ALCHEMY) then
+              HandleFunction(CraftType, false, journalQuestIndex, conditionIndex)
+            end
+          end
         end
       end
     end
@@ -373,13 +424,13 @@ end
 -----------------------------------------------
 
 local Icon = {
-  [1] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_blacksmithing_up.dds:inheritColor|t",  --BlackSmith
-  [2] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_clothing_up.dds:inheritColor|t", --Cloth
-  [3] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_enchanting_up.dds:inheritColor|t", --Enchat
-  [4] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_alchemy_up.dds:inheritColor|t", --Alchmy
-  [5] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_provisioning_up.dds:inheritColor|t", --Cook
-  [6] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_woodworking_up.dds:inheritColor|t", --Wood
-  [7] = "|t40:40:esoui/art/tutorial/tutorial_idexicon_jewelry_up.dds:inheritColor|t", --Jewelry
+  [1] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_blacksmithing_up.dds:inheritColor|t",   --BlackSmith
+  [2] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_clothing_up.dds:inheritColor|t",        --Cloth
+  [3] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_enchanting_up.dds:inheritColor|t",      --Enchat
+  [4] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_alchemy_up.dds:inheritColor|t",         --Alchmy
+  [5] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_provisioning_up.dds:inheritColor|t",    --Cook
+  [6] = "|t40:40:esoui/art/inventory/inventory_tabicon_craftbag_woodworking_up.dds:inheritColor|t",     --Wood
+  [7] = "|t40:40:esoui/art/tutorial/tutorial_idexicon_jewelry_up.dds:inheritColor|t",                   --Jewelry
 }
 
 function SDC.QuestUpdate()
@@ -389,97 +440,124 @@ function SDC.QuestUpdate()
   SDC.BankTargetType = {} --Reset the item type should be taken from bank
   SDC.HaveDaily = false
   SDC.UndoneMaster = false
-  local List = {}
+  
   --EachCraftType: HaveCraftQuest? DoneDaily? DoneMaster?
-  for i = 1, 7 do List[i] = {false, true, true} end 
+  local List = {}
+  local HaveQuest, DoneDaily, DoneMaster = 1, 2, 3
+  for i = 1, SDC.C.CRAFT_TYPE_NUMBER do 
+    List[i] = {false, true, true} 
+  end
+  
   --Start analyze
-  for a = 1, 25 do
-    local Type = select(10, GetJournalQuestInfo(a))
-    if Type == 4 then --Craft quests
-      if GetQuestConditionMasterWritInfo(a, 1, 1) then 
-        --Master Writs
-        local _,_, CraftType = GetQuestConditionMasterWritInfo(a, 1, 1)
-        local current, need = GetJournalQuestConditionValues(a, 1, 1)
-        List[CraftType][1] = true
-        if current < need then --Undone master
-          List[CraftType][3] = false
+  for journalQuestIndex = 1, SDC.C.MAX_NUMBER_QUEST do
+    local QuestType = select(10, GetJournalQuestInfo(journalQuestIndex))
+    
+    if QuestType == SDC.C.QUEST_TYPE_WRIT then
+    --Craft quests
+      if GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1) then 
+      --Master Writs
+        local _,_, CraftType = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1)
+        List[CraftType][HaveQuest] = true
+
+        --Undone master
+        if SDC.TF.MissedWritItemNumber(journalQuestIndex, 1) > 0 then 
+          List[CraftType][DoneMaster] = false
           SDC.UndoneMaster = true
-        end 
+        end
+      
       else
-        --Daily Writs
-        local NowType = 0
-        for b = 1, 6 do 
-          local ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(a, 1, b)
-          local current, need = GetJournalQuestConditionValues(a, 1, b)
-          --Craft item
-          if ItemId ~= 0 and CraftType ~= 0 then
-            --Ban quest check
-            if not SDC.SV.BQ and CraftType == 1 then table.insert(SDC.AbandonList, a) end
-            if not SDC.SV.CQ and CraftType == 2 then table.insert(SDC.AbandonList, a) end
-            if not SDC.SV.WQ and CraftType == 6 then table.insert(SDC.AbandonList, a) end
-            if not SDC.SV.JQ and CraftType == 7 then table.insert(SDC.AbandonList, a) end
-            if not SDC.SV.PQ and CraftType == 5 then table.insert(SDC.AbandonList, a) end
-            if not SDC.SV.EQ and CraftType == 3 then table.insert(SDC.AbandonList, a) end
-            if not SDC.SV.AQ and CraftType == 4 then table.insert(SDC.AbandonList, a) end
-            NowType = CraftType --Record this quest type for material check
-            List[CraftType][1] = true
-            SDC.HaveDaily = true
-            --Undone
-            if current < need then 
-              List[CraftType][2] = false 
-              --For comsuable type bank work
-              if CraftType > 2 and CraftType < 6 then 
-                table.insert(SDC.BankTarget, {ItemId, need - current, a, b}) --Try get from bank later
-                SDC.BankTargetType[CraftType] = true
-              end
-            end 
-          end
-          --Raw material
-          if ItemId ~= 0 and CraftType == 0 and NowType ~= 0 then
-            --Banlist check
+      --Daily Writs
+        for conditionIndex = 1, SDC.C.MAX_NUMBER_CONDITION_INDEX do 
+          local ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
+          local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
+
+          --Craft Info
+          if ItemId ~= 0 then
+            --Check Banned Quests
+            if not SDC.SV.BQ and CraftType == 1 then table.insert(SDC.AbandonList, journalQuestIndex) end
+            if not SDC.SV.CQ and CraftType == 2 then table.insert(SDC.AbandonList, journalQuestIndex) end
+            if not SDC.SV.WQ and CraftType == 6 then table.insert(SDC.AbandonList, journalQuestIndex) end
+            if not SDC.SV.JQ and CraftType == 7 then table.insert(SDC.AbandonList, journalQuestIndex) end
+            if not SDC.SV.PQ and CraftType == 5 then table.insert(SDC.AbandonList, journalQuestIndex) end
+            if not SDC.SV.EQ and CraftType == 3 then table.insert(SDC.AbandonList, journalQuestIndex) end
+            if not SDC.SV.AQ and CraftType == 4 then table.insert(SDC.AbandonList, journalQuestIndex) end
+            
+            --Check Banned Alchemy Materials
             for i = 1, #SDC.SV.DailyRawRestrict do
               if ItemId == SDC.SV.DailyRawRestrict[i] then
                 SDC.DD(11, {ToLink(ItemId)})
-                table.insert(SDC.AbandonList, a)
+                table.insert(SDC.AbandonList, journalQuestIndex)
               end
             end
-            --Undone
-            if current < need then 
-              List[NowType][2] = false
-              table.insert(SDC.BankTarget, {ItemId, need - current, a, b}) --Try get from bank later
-              SDC.BankTargetType[NowType] = true
+            
+            local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
+            List[CraftType][HaveQuest] = true
+            SDC.HaveDaily = true
+            
+            --Undone Daily
+            if MissedItemNumber > 0 then 
+              List[CraftType][DoneDaily] = false 
+              --For comsuable type bank work
+              if (CraftType == SDC.C.CRAFT_TYPE_ENCHANT or CraftType == SDC.C.CRAFT_TYPE_ALCHEMY or CraftType == SDC.C.CRAFT_TYPE_COOK) then 
+                table.insert(SDC.BankTarget, {ItemId, MissedItemNumber, journalQuestIndex, conditionIndex}) --Try get from bank later
+                SDC.BankTargetType[CraftType] = true
+              end
             end
           end
         end
       end
     end
   end
-  --Bar info
+  
+  --Bar Display
   local Display = " "
-  local Order = {1,6,2,7,5,3,4} --Resort the display order
+  local Order = { --Resort the display order
+    SDC.C.CRAFT_TYPE_BLACKSMITH,
+    SDC.C.CRAFT_TYPE_WOOD,
+    SDC.C.CRAFT_TYPE_CLOTH,
+    SDC.C.CRAFT_TYPE_JEWLERY,
+    SDC.C.CRAFT_TYPE_COOK,
+    SDC.C.CRAFT_TYPE_ENCHANT,
+    SDC.C.CRAFT_TYPE_ALCHEMY,
+  } 
   local ShouldH = true
-  for i = 1, 7 do --Check each craft type
-    if List[Order[i]][1] == false then --No quest
+  --Check each craft type
+  for i = 1, SDC.C.CRAFT_TYPE_NUMBER do 
+    if List[Order[i]][HaveQuest] == false then --No quest
       Display = Display.."|c778899"..Icon[Order[i]].."|r"
     else
       ShouldH = false
       --Finish
-      if List[Order[i]][2] == true and List[Order[i]][3] == true then Display = Display.."|c32CD32"..Icon[Order[i]].."|r" end
+      if List[Order[i]][DoneDaily] == true and List[Order[i]][DoneMaster] == true then 
+        Display = Display.."|c32CD32"..Icon[Order[i]].."|r" 
+      end
+      
       --Only master left undone
-      if List[Order[i]][2] == true and List[Order[i]][3] == false then Display = Display.."|c8A2BE2"..Icon[Order[i]].."|r" end
+      if List[Order[i]][DoneDaily] == true and List[Order[i]][DoneMaster] == false then 
+        Display = Display.."|c8A2BE2"..Icon[Order[i]].."|r" 
+      end
+      
       --Only daily left undone
-      if List[Order[i]][2] == false and List[Order[i]][3] == true then Display = Display.."|cF0E68C"..Icon[Order[i]].."|r" end
+      if List[Order[i]][DoneDaily] == false and List[Order[i]][DoneMaster] == true then 
+        Display = Display.."|cF0E68C"..Icon[Order[i]].."|r" 
+      end
+      
       --Both undone
-      if List[Order[i]][2] == false and List[Order[i]][3] == false then Display = Display.."|cDC143C"..Icon[Order[i]].."|r" end
+      if List[Order[i]][DoneDaily] == false and List[Order[i]][DoneMaster] == false then 
+        Display = Display.."|cDC143C"..Icon[Order[i]].."|r" 
+      end
     end
   end
+  
+  --Set Info to Display
   SDCTopLevel_Label:SetText(Display)
-  --Bar display
+  
+  --Should Hide Bar?
   if not SDC.SV.Window_Show then
     SDCTopLevel:SetHidden(true)
     return
   end
-  SDCTopLevel:SetHidden(ShouldH) --No craft quests
+  SDCTopLevel:SetHidden(ShouldH)
 end
 
 --When window move, record its new position in SV

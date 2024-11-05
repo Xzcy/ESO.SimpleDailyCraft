@@ -152,26 +152,35 @@ end
 
 --Enchant
 local function FindMaterial(ItemId)
-  if GetItemId(5, ItemId) ~= 0 then --Craft bag
+  --Craft bag
+  if GetItemId(5, ItemId) ~= 0 then 
     return 5, ItemId
   end
-  for i = 0, GetBagSize(2) do -- bank
+  
+  --Bank
+  for i = 0, GetBagSize(2) do 
     if GetItemId(2, i) == ItemId then
       return 2, i
     end
   end
-  if IsESOPlusSubscriber() then --Subscriber bank
+  
+  --Subscriber bank
+  if IsESOPlusSubscriber() then 
     for i = 0, GetBagSize(6) do
       if GetItemId(6, i) == ItemId then
         return 6, i
       end
     end
   end
-  for i = 0, GetBagSize(1) do -- bag
+  
+  --Bag
+  for i = 0, GetBagSize(1) do 
     if GetItemId(1, i) == ItemId then
       return 1, i
     end
   end
+  
+  --None
   SDC.CraftList["Stop"] = true
   SDC.DD(3, {ToLink(ItemId)})
   return 0, 0
@@ -302,9 +311,9 @@ function SDC.CraftAlchemy(IsFirst, ...)
       SDC.CraftAlchemy()
       return
     end
-    TotalCombo = SDC.Master2Craft[Table["Craft"][2]]  -- Get all possible combos of 2 Reagents by item id
+    TotalCombo = SDC.Master2Craft[Table["Craft"][2]]  -- Get all possible combos of 3 Reagents by encode
   else
-    TotalCombo = SDC.Alchmy2Craft[Table["Craft"][2]]  -- Get all possible combos of 3 reagents by encode
+    TotalCombo = SDC.Alchmy2Craft[Table["Craft"][2]]  -- Get all possible combos of 2 reagents by item id
   end
   
   --Resort combo with cost by TTC
@@ -434,6 +443,7 @@ end
 
 --Materila saving skill id
 local SkillTable = {
+  --Skill and Max Level
   [1] = {48166  , 3}, --Black
   [2] = {48196  , 3}, --Cloth
   [6] = {48175  , 3}, --Wood

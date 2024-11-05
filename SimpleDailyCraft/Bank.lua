@@ -4,10 +4,11 @@ SDC.BankTarget = {--[[
   [1] = {
     [1] = ItemId,
     [2] = NumNeed,
-    [3] = a, questindex
-    [4] = b, questindex
+    [3] = journalQuestIndex,
+    [4] = conditionIndex,
   },
 ]]}
+
 --When bank function run, avoid changing by quest update
 SDC.RunTarget = {--[[
   [1] = {
@@ -18,6 +19,7 @@ SDC.RunTarget = {--[[
     ["Slot"] = {Slot1, Slot2, Slot3...} BagSlotId to put item
   }
 ]]}
+
 --Compatibility with PA
 SDC.BankTargetType = {--[[
   [Craft Type] = true
@@ -184,7 +186,7 @@ function SDC.BankItemScan(ItemId, a, b)
     }
   --Look in Bank
   for i = 0, GetBagSize(2) do
-    if GetItemId(2, i) == ItemId and DoesItemLinkFulfillJournalQuestCondition(GetItemLink(2, i), a, 1, b, true) then
+    if GetItemId(2, i) == ItemId and DoesItemLinkFulfillJournalQuestCondition(GetItemLink(2, i), a, 1, b, GetItemCreatorName(2, i) == GetUnitName("player")) then
       local count = select(2, GetItemInfo(2, i))
       Table["TotalNum"] = Table["TotalNum"] + count
       table.insert(Table["Info"], {2, i, GetItemLink(2, i), count})
@@ -193,7 +195,7 @@ function SDC.BankItemScan(ItemId, a, b)
   --Look in PlusBank
   if IsESOPlusSubscriber() then 
     for i = 0, GetBagSize(6) do
-      if GetItemId(6, i) == ItemId and DoesItemLinkFulfillJournalQuestCondition(GetItemLink(6, i), a, 1, b, true) then
+      if GetItemId(6, i) == ItemId and DoesItemLinkFulfillJournalQuestCondition(GetItemLink(6, i), a, 1, b, GetItemCreatorName(6, i) == GetUnitName("player")) then
         local count = select(2, GetItemInfo(6, i))
         Table["TotalNum"] = Table["TotalNum"] + count
         table.insert(Table["Info"], {6, i, GetItemLink(6, i), count})
