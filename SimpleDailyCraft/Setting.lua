@@ -80,6 +80,16 @@ end
 ----Menu----
 ------------
 
+local Icon = {
+  [1] = "|t25:25:esoui/art/inventory/inventory_tabicon_craftbag_blacksmithing_up.dds:inheritColor|t",   --BlackSmith
+  [2] = "|t25:25:esoui/art/inventory/inventory_tabicon_craftbag_clothing_up.dds:inheritColor|t",        --Cloth
+  [3] = "|t25:25:esoui/art/inventory/inventory_tabicon_craftbag_enchanting_up.dds:inheritColor|t",      --Enchat
+  [4] = "|t25:25:esoui/art/inventory/inventory_tabicon_craftbag_alchemy_up.dds:inheritColor|t",         --Alchmy
+  [5] = "|t25:25:esoui/art/inventory/inventory_tabicon_craftbag_provisioning_up.dds:inheritColor|t",    --Cook
+  [6] = "|t25:25:esoui/art/inventory/inventory_tabicon_craftbag_woodworking_up.dds:inheritColor|t",     --Wood
+  [7] = "|t25:25:esoui/art/tutorial/tutorial_idexicon_jewelry_up.dds:inheritColor|t",                   --Jewelry
+}
+
 function SDC.BuildMenu()
   local panelData = {
     type = "panel",
@@ -125,12 +135,13 @@ function SDC.BuildMenu()
     
     { --Prompt
     type = "submenu", 
-		name = GetString(SI_INTERFACE_OPTIONS_TOOLTIPS),
+		name = GetString(SI_INTERFACE_OPTIONS_TOOLTIPS).." / "..GetString(SI_SETTINGSYSTEMPANEL3),
     reference = "SDC_Prompt",
 		controls = {
         { --Bar
         type = "checkbox",
-        name = GetString(SI_ANTIQUITYFILTER2).." -> ".."|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t".."|t25:25:esoui/art/icons/master_writ_alchemy.dds|t",  
+        name = GetString(SI_SETTINGSYSTEMPANEL3)..": "..table.concat(Icon),
+        tooltip = GetString(SI_BINDING_NAME_TOGGLE_SHOW_INGAME_GUI),
         width = "full",
         getFunc = function() return SDC.SV.Window_Show end,
         setFunc = function(var) 
@@ -140,7 +151,8 @@ function SDC.BuildMenu()
         },
         { --Alchemy Cost
         type = "checkbox",
-        name = GetString(SI_TRADESKILLTYPE4).." -> "..zo_strformat(GetString(SI_MONEY_FORMAT), "? "),  
+        name = GetString(SI_TRADESKILLTYPE4).." -> "..zo_strformat(GetString(SI_MONEY_FORMAT), "? "),
+        tooltip = GetString(SI_GUILDKEEPNOTICESSETTINGCHOICE1),
         width = "full",
         getFunc = function() return SDC.SV.DD_AlchemyCost end,
         setFunc = function(var) SDC.SV.DD_AlchemyCost = var end,
@@ -148,6 +160,7 @@ function SDC.BuildMenu()
         { --Material Left
         type = "slider",
         name = GetString(SI_HOOK_POINT_STORE_REMAINING).."["..GetString(SI_SMITHING_HEADER_MATERIAL).."] x ?", 
+        tooltip = GetString(SI_GUILDKEEPNOTICESSETTINGCHOICE1),
         getFunc = function() return SDC.SV.DD_SmithMaterialLeft end,
         setFunc = function(var) SDC.SV.DD_SmithMaterialLeft = var end,
         min = 0,
@@ -157,6 +170,7 @@ function SDC.BuildMenu()
         { --Bank Take
         type = "checkbox", 
         name = GetString(SI_CURRENCYLOCATION1).." -> "..GetString(SI_CRAFTING_MISSING_ITEMS).." -> ...",
+        tooltip = GetString(SI_GUILDKEEPNOTICESSETTINGCHOICE1),
         width = "full",
         getFunc = function() return SDC.SV.DD_Bank end,
         setFunc = function(var) SDC.SV.DD_Bank = var end,
@@ -164,6 +178,7 @@ function SDC.BuildMenu()
         { --Announce
         type = "checkbox",
         name = GetString(SI_MAIN_MENU_ANNOUNCEMENTS).." -> "..GetString(SI_BINDING_NAME_TOGGLE_JOURNAL),
+        tooltip = GetString(SI_QUEST_TRACKER_MENU_SHOW_IN_JOURNAL),
         width = "full",
         getFunc = function() return SDC.SV.DD_Announce end,
         setFunc = function(var) SDC.SV.DD_Announce = var end,
@@ -171,6 +186,7 @@ function SDC.BuildMenu()
         { --ResearchHelper
         type = "checkbox", 
         name = GetString(SI_SPECIALIZEDITEMTYPE101).." -> "..GetString(SI_GAMEPAD_GROUP_FINDER_SEARCH_RESULTS_REFRESH_KEYBIND),  
+        tooltip = GetString(SI_GUILDKEEPNOTICESSETTINGCHOICE1),
         width = "full",
         getFunc = function() return SDC.SV.DD_Research end,
         setFunc = function(var) SDC.SV.DD_Research = var end,
@@ -180,12 +196,13 @@ function SDC.BuildMenu()
     
     { --Quest
     type = "submenu", 
-		name = GetString(SI_COLLECTIBLE_ACTION_ACCEPT_QUEST),
+		name = GetString(SI_COLLECTIBLE_ACTION_ACCEPT_QUEST).." / "..GetString(SI_QUEST_COMPLETE_CONFIRM_TITLE),
     reference = "SDC_Quest",
 		controls = {
         { --QuestAuto
         type = "checkbox",
-        name = "|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t|t25:25:esoui/art/icons/master_writ_alchemy.dds|t "..GetString(SI_BINDING_NAME_AUTORUN),  
+        name = "|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t|t25:25:esoui/art/icons/master_writ_alchemy.dds|t "..GetString(SI_BINDING_NAME_AUTORUN),
+        tooltip = GetString(SI_TIMEDACTIVITYTYPE0).." / "..GetString(SI_ITEMTYPE60),
         width = "half",
         getFunc = function() return SDC.SV.QuestAuto end,
         setFunc = function(var) SDC.SV.QuestAuto = var end,
@@ -265,6 +282,7 @@ function SDC.BuildMenu()
         { --DailyCraft
         type = "checkbox",
         name = "|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t"..GetString(SI_BINDING_NAME_AUTORUN),  
+        tooltip = GetString(SI_TIMEDACTIVITYTYPE0),
         width = "half",
         getFunc = function() return SDC.SV.DailyCraft end,
         setFunc = function(var) 
@@ -282,6 +300,7 @@ function SDC.BuildMenu()
         { --MasterCraft
         type = "checkbox",
         name = "|t25:25:esoui/art/icons/master_writ_alchemy.dds|t "..GetString(SI_BINDING_NAME_AUTORUN),  
+        tooltip = GetString(SI_ITEMTYPE60),
         width = "half",
         getFunc = function() return SDC.SV.MasterCraft end,
         setFunc = function(var) SDC.SV.MasterCraft = var end,
@@ -368,7 +387,8 @@ function SDC.BuildMenu()
 		controls = {
         { --Bank for comsuble
         type = "checkbox",
-        name = GetString(SI_CURRENCYLOCATION1).." -> ".."|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t"..GetString(SI_GAMEPADITEMCATEGORY8),  
+        name = GetString(SI_CURRENCYLOCATION1).." -> ".."|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t"..GetString(SI_GAMEPADITEMCATEGORY8),
+        tooltip = GetString(SI_TIMEDACTIVITYTYPE0),
         width = "full",
         getFunc = function() return SDC.SV.Bank end,
         setFunc = function(var) SDC.SV.Bank = var end,
@@ -376,6 +396,7 @@ function SDC.BuildMenu()
         { --Assistant
           type = "checkbox",
           name = GetString(SI_ENTER_CODE_CONFIRM_BUTTON).." ("..GetString(SI_COLLECTIBLECATEGORYTYPE8)..")",
+          tooltip = GetString(SI_ACTIONBARSETTINGCHOICE2),
           width = "half",
           getFunc = function() return SDC.SV.OpenBankAssistant end,
           setFunc = function(var) SDC.SV.OpenBankAssistant = var end,
@@ -383,6 +404,7 @@ function SDC.BuildMenu()
         { --Npc
           type = "checkbox",
           name = GetString(SI_ENTER_CODE_CONFIRM_BUTTON).." ("..GetString(SI_CHAT_CHANNEL_NAME_NPC)..")",
+          tooltip = GetString(SI_ACTIONBARSETTINGCHOICE2),
           width = "half",
           getFunc = function() return SDC.SV.OpenBank end,
           setFunc = function(var) SDC.SV.OpenBank = var end,
@@ -390,6 +412,7 @@ function SDC.BuildMenu()
         { --Close
           type = "checkbox",
           name = GetString(SI_DIALOG_BUTTON_TEXT_QUIT_FORCE),
+          tooltip = GetString(SI_ACTIONBARSETTINGCHOICE2),
           width = "full",
           getFunc = function() return SDC.SV.CloseBank end,
           setFunc = function(var) SDC.SV.CloseBank = var end,
@@ -399,7 +422,7 @@ function SDC.BuildMenu()
 
     { --Alchemy
     type = "submenu", 
-		name = GetString(SI_TRADESKILLTYPE4),
+		name = GetString(SI_TRADESKILLRESULT106),
     reference = "SDC_Alchemy",
 		controls = {
         { --Which reagent
@@ -413,6 +436,7 @@ function SDC.BuildMenu()
         { --Daily craft banlist
         type = "button",
         name = "|t15:15:esoui/art/castbar/forbiddenaction.dds|t|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t  "..GetString(SI_ALCHEMY_CREATION),
+        tooltip = GetString(SI_TIMEDACTIVITYTYPE0),
         func = function()
           SDC.SV.DailyRestrict = BanList(Select, SDC.SV.DailyRestrict)
           SDC_LAM_Desc1.data.text = Desc(SDC.SV.DailyRestrict)
@@ -427,6 +451,7 @@ function SDC.BuildMenu()
         { --Daily commit banlist
         type = "button",
         name = "|t15:15:esoui/art/castbar/forbiddenaction.dds|t|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t  "..GetString(SI_GAMEPAD_TRADE_SUBMIT),
+        tooltip = GetString(SI_TIMEDACTIVITYTYPE0),
         func = function()
           SDC.SV.DailyRawRestrict = BanList(Select, SDC.SV.DailyRawRestrict)
           SDC_LAM_Desc1.data.text = Desc(SDC.SV.DailyRestrict)
@@ -457,6 +482,7 @@ function SDC.BuildMenu()
         { --Master craft banlist
         type = "button",
         name = "|t15:15:esoui/art/castbar/forbiddenaction.dds|t|t25:25:esoui/art/icons/master_writ_alchemy.dds|t  "..GetString(SI_ALCHEMY_CREATION),
+        tooltip = GetString(SI_ITEMTYPE60),
         func = function() 
           SDC.SV.MasterRestrict = BanList(Select, SDC.SV.MasterRestrict)
           SDC_LAM_Desc1.data.text = Desc(SDC.SV.DailyRestrict)
@@ -497,6 +523,7 @@ function SDC.BuildMenu()
         { --Add/Delete
         type = "button",
         name = GetString(SI_GAMEPAD_MAIL_SEND_ATTACH_ITEM).." / "..GetString(SI_GAMEPAD_MAIL_SEND_CLEAR),
+        tooltip = GetString(SI_TIMEDACTIVITYTYPE0),
         func = function() 
           if SDC.SV.StyleList[Select2] then
             SDC.SV.StyleList[Select2] = nil

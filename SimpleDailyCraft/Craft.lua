@@ -203,7 +203,7 @@ function SDC.CraftEnchant(IsFirst, ...)
   --To avoid use Hakeijo
   if Table["Craft"][2] == 68342 then
     SDC.CraftList["Stop"] = true
-    SDC.dd(4, {ToLink(68342)})
+    SDC.DD(4, {ToLink(68342)})
     SDC.CraftEnchant()
     return
   end
