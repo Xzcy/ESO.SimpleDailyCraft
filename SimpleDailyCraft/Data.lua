@@ -6,7 +6,7 @@ local SDC = SimpleDailyCraft
 SDC.name = "SimpleDailyCraft"
 SDC.title = "SimpleDailyCraft"
 SDC.author = "@MelanAster"
-SDC.version = "0.77"
+SDC.version = "0.78"
 
 --Constant
 SDC.C = {
@@ -28,11 +28,23 @@ SDC.C = {
 
 --Tool Functions
 SDC.TF = {
+  --ItemId to ItemLink
+  ToLink = function(itemId)
+    return "|H0:item:"..itemId..":30:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h"
+  end,
+  
   --Number of item still needed for writ requirements
   MissedWritItemNumber = function(journalQuestIndex, conditionIndex)
     local stepIndex = 1
     local current, need = GetJournalQuestConditionValues(journalQuestIndex, stepIndex, conditionIndex)
     return need - current
+  end,
+  
+  --Is it a kind of raw materials
+  IsRawMaterial = function(itemId)
+    local itemFilter = GetItemLinkFilterTypeInfo(SDC.TF.ToLink(itemId))
+    if itemFilter == ITEMFILTERTYPE_CRAFTING then return true end
+    return false 
   end,
 }
 

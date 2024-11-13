@@ -1,7 +1,7 @@
 ## Title: SimpleDailyCraft
 ## APIVersion: 101044
-## Version: 0.77
-## AddOnVersion: 20241110
+## Version: 0.78
+## AddOnVersion: 20241114
 ## Author: @MelanAster
 ## Description: To complete daily and master craft writs
 ## DependsOn: LibAddonMenu-2.0

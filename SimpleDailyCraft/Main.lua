@@ -394,8 +394,8 @@ function SDC.QuestCheck(CurrentType)
     
     --Craft Quests
     if QuestType == SDC.C.QUEST_TYPE_WRIT then
-      if GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1) then
       --Master Writs
+      if GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1) then
         local _,_, CraftType = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1)
         --Should be Handled in this Station?
         if CraftType == CurrentType then
@@ -406,12 +406,10 @@ function SDC.QuestCheck(CurrentType)
       --Daily Writs
         for conditionIndex = 1, SDC.C.MAX_NUMBER_CONDITION_INDEX do
           local ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
-          --Should be Handled in this Station?
-          if CraftType == CurrentType then 
-            --Patch for Raw Materials of Enchant and Alchemy
-            if MaterialId ~= 0 or (CraftType ~= SDC.C.CRAFT_TYPE_ENCHANT and CraftType ~= SDC.C.CRAFT_TYPE_ALCHEMY) then
-              HandleFunction(CraftType, false, journalQuestIndex, conditionIndex)
-            end
+          --Patch for Some Materials
+          if CraftType == 0 then CraftType = GetItemLinkCraftingSkillType(SDC.TF.ToLink(ItemId)) end
+          if ItemId ~= 0 and CraftType == CurrentType and (not SDC.TF.IsRawMaterial(ItemId)) then
+            HandleFunction(CraftType, false, journalQuestIndex, conditionIndex)
           end
         end
       end
@@ -457,9 +455,10 @@ function SDC.QuestUpdate()
       if GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1) then 
       --Master Writs
         local _,_, CraftType = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1)
+        --Have Writs
         List[CraftType][HaveQuest] = true
 
-        --Undone master
+        --Undone Master ?
         if SDC.TF.MissedWritItemNumber(journalQuestIndex, 1) > 0 then 
           List[CraftType][DoneMaster] = false
           SDC.UndoneMaster = true
@@ -469,10 +468,12 @@ function SDC.QuestUpdate()
       --Daily Writs
         for conditionIndex = 1, SDC.C.MAX_NUMBER_CONDITION_INDEX do 
           local ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
-          local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
-
+          --Patch for Some Materials
+          if CraftType == 0 then CraftType = GetItemLinkCraftingSkillType(SDC.TF.ToLink(ItemId)) end
+          
           --Craft Info
-          if ItemId ~= 0 then
+          if ItemId ~= 0 and CraftType ~= 0 then
+            
             --Check Banned Quests
             if not SDC.SV.BQ and CraftType == 1 then table.insert(SDC.AbandonList, journalQuestIndex) end
             if not SDC.SV.CQ and CraftType == 2 then table.insert(SDC.AbandonList, journalQuestIndex) end
@@ -490,13 +491,15 @@ function SDC.QuestUpdate()
               end
             end
             
-            local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
+            --Have Writs
             List[CraftType][HaveQuest] = true
             SDC.HaveDaily = true
             
-            --Undone Daily
+            --Undone Daily ?
+            local MissedItemNumber = SDC.TF.MissedWritItemNumber(journalQuestIndex, conditionIndex)
             if MissedItemNumber > 0 then 
-              List[CraftType][DoneDaily] = false 
+              List[CraftType][DoneDaily] = false
+              
               --For comsuable type bank work
               if (CraftType == SDC.C.CRAFT_TYPE_ENCHANT or CraftType == SDC.C.CRAFT_TYPE_ALCHEMY or CraftType == SDC.C.CRAFT_TYPE_COOK) then 
                 table.insert(SDC.BankTarget, {ItemId, MissedItemNumber, journalQuestIndex, conditionIndex}) --Try get from bank later
