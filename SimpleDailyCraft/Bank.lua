@@ -8,17 +8,7 @@ SDC.BankTarget = {--[[
     [4] = conditionIndex,
   },
 ]]}
-
---When bank function run, avoid changing by quest update
-SDC.RunTarget = {--[[
-  [1] = {
-    [1] = Item Id,
-    [2] = Need Num,
-    [3] = a, quest index
-    [4] = b, quest index
-    ["Slot"] = {Slot1, Slot2, Slot3...} BagSlotId to put item
-  }
-]]}
+SDC.Banking = false
 
 --Compatibility with PA
 SDC.BankTargetType = {--[[
@@ -35,6 +25,7 @@ end
 
 local function ShouldOpenBank(Report)
   local Should = false
+  --Anything can take?
   for i = 1, #SDC.BankTarget do
     local Table = SDC.BankItemScan(SDC.BankTarget[i][1], SDC.BankTarget[i][3], SDC.BankTarget[i][4])
     if Table["TotalNum"] >= SDC.BankTarget[i][2] then 
@@ -51,12 +42,16 @@ end
 -----------------
 
 --Core for bank work
-function SDC.BankCore(scene, _, newstate)
+function SDC.BankCore(scene, _, newstate) --Callback: SceneStateChanged
+  --Check Setting
   if not SDC.SV.Bank then return end
+  --Check State
   if newstate ~= SCENE_SHOWN then return end
-  --Auto open bank
+  
+  --Interact Part
   if scene.name == "interact" then
     local Type
+    --Auto open bank
     if SCENE_MANAGER:IsShowing("interact") then
       local control = WINDOW_MANAGER:GetControlByName("ZO_ChatterOption1")
       Type = control.optionType
@@ -75,105 +70,80 @@ function SDC.BankCore(scene, _, newstate)
     end
     return
   end
-  --For bank work
-  if scene.name == "bank" and ShouldOpenBank(false) then
-    SDC.RunTarget = {unpack(SDC.BankTarget)} --To clone
-    if SDC.RunTarget[1] == nil then return end
-    EVENT_MANAGER:RegisterForEvent("SDCBank", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, SDC.BankProcess)
-    SDC.BankProcess(_, 1)
+  
+  --Bank Part
+  if scene.name == "bank" then
+    if ShouldOpenBank(false) then
+      --Something can take
+      SDC.Banking = true
+      SDC.BankProcess()
+    else
+      return
+    end
   end
 end
 
 --Take item from bank
-local TooLow = {}
-function SDC.BankProcess(_, BagId, SlotId, IsNew, _, _, NumChange)
-  --Only triggle for backbag change(1 time/transfer)
-  if BagId ~= 1 then return end
+local itemTaked = {}
+function SDC.BankProcess()
+  --Check Setting
+  if not SDC.SV.Bank then 
+    SDC.Banking = false
+    return
+  end
   
-  --Check Done
-  if SDC.RunTarget[1] == nil then
+  --Check Done or Nothing can take
+  if SDC.BankTarget == {} or not ShouldOpenBank(false) then
+    --Stop Banking
+    SDC.Banking = false
     SDC.DD(9, {})
-    --Close bank if set
-    if SDC.SV.CloseBank then
+    --Close bank if set and really take something
+    if SDC.SV.CloseBank and itemTaked ~= {} then
       SCENE_MANAGER:Hide("bank")
       SCENE_MANAGER:Hide("gamepad_banking")
     end
-    EVENT_MANAGER:UnregisterForEvent("SDCBank", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
-    for k, Link in pairs(TooLow) do --Push item near clear
+    --Push the remain of item taken
+    for k, Link in pairs(itemTaked) do
       local _, count = GetItemLinkStacks(Link) --Item left in bank for each kind of link
-      SDC.DD(1.2, {Link, count}) --Check Item num in prompt.lua
+      SDC.DD(1.2, {Link, count})
     end
-    TooLow = {}
+    itemTaked = {}
     return
   end
-
-  --Check Full
+  
+  --At least one free slot ?
   if GetNumBagFreeSlots(1) == 0 then
     SDC.DD(8, {})
-    EVENT_MANAGER:UnregisterForEvent("SDCBank", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+    --Stop Banking
+    SDC.Banking = false
     return
-  end
-  
-  --Check item already get
-  local Remain = SDC.RunTarget[1][2]
-  if not SDC.RunTarget[1]["slot"] then
-  --First round for one item
-    SDC.RunTarget[1]["slot"] = {}
-    table.insert(SDC.RunTarget[1]["slot"] ,FindFirstEmptySlotInBag(1)) 
-  else
-  
-  --Check Num still need to get
-    for i = 1, #SDC.RunTarget[1]["slot"] do
-      local SlotCount = select(2, GetItemInfo(1, SDC.RunTarget[1]["slot"][i])) --Count Num get
-      Remain = Remain - SlotCount
-    end
-    --Already get enough item, Turn to next target
-    if Remain == 0 then 
-      table.remove(SDC.RunTarget, 1)
-      SDC.BankProcess(_, 1)
-      return
-    end
   end
 
---Check total num of item in bank 
-  local BankList = SDC.BankItemScan(SDC.RunTarget[1][1], SDC.RunTarget[1][3], SDC.RunTarget[1][4])
---[[
-Structure{
-    ["TotalNum"] = 0,
-    ["Info"] = {
-      --{BagId, SlotId, Link, Min},
-      ...
-      --{BagId, SlotId, Link, Max},
-    },
-  }
-]]
-  --Not enough for quest, skip this item
-  if BankList["TotalNum"] < Remain then 
-    table.remove(SDC.RunTarget, 1)
-    SDC.BankProcess(_, 1)
-    return
-  end
-  
-  --Record item will take
-  TooLow[BankList["Info"][1][3]] = BankList["Info"][1][3] --ToolLow["ItemLink"] = "ItemLink"
-  --The slot contain the min number of target item
-  local Final = BankList["Info"][1] 
-  --{BagId, SlotId, Link, Min}
-  if Final[4] < Remain then Remain = Final[4] end --Get how many
-  
-  --Take Items
-  for i = 1, #SDC.RunTarget[1]["slot"] do
-  --Check can stack？
-    if GetItemTotalCount(1, SDC.RunTarget[1]["slot"][i]) == 0 or GetItemLink(1, SDC.RunTarget[1]["slot"][i]) == Final[3] then 
-      CallSecureProtected("RequestMoveItem", Final[1], Final[2], 1, SDC.RunTarget[1]["slot"][i], Remain)
-      return
+  --Take What
+  for i = 1, #SDC.BankTarget do
+    --Initial
+    local itemId, numNeed, qIndex, cIndex = unpack(SDC.BankTarget[i])
+    local bankItem = SDC.BankItemScan(itemId, qIndex, cIndex)
+    --Check Number
+    if bankItem["TotalNum"] >= numNeed then
+      local bankId, bankSlot, itemLink, bankNum = unpack(bankItem["Info"][1])
+      local numTake = math.min(numNeed, bankNum)
+      --Stack or new slot
+      if IsItemLinkStackable(itemLink) and GetItemLinkStacks(itemLink) > 0 then
+        for bagSlot = 0, GetBagSize(1) do 
+          if itemLink == GetItemLink(1, bagSlot) then
+            CallSecureProtected("RequestMoveItem", bankId, bankSlot, 1, bagSlot, numTake)
+            itemTaked[itemLink] = itemLink
+            return
+          end
+        end
+      else
+        CallSecureProtected("RequestMoveItem", bankId, bankSlot, 1, FindFirstEmptySlotInBag(1), numTake)
+        itemTaked[itemLink] = itemLink
+        return
+      end
     end
   end
-  --Can't stack
-  local NewSlot = FindFirstEmptySlotInBag(1)
-  table.insert(SDC.RunTarget[1]["slot"], NewSlot)
-  CallSecureProtected("RequestMoveItem", Final[1], Final[2], 1, NewSlot, Remain)
-  return
 end
 
 --ItemId and quest index to check target item info

@@ -355,7 +355,7 @@ function SDC.HandleCook(IsMaster, journalQuestIndex, conditionIndex)
   end
   
   --To Recipe Info
-    RecipeListIndex, RecipeIndex = unpack(Recipes[ItemId])
+  RecipeListIndex, RecipeIndex = unpack(Recipes[ItemId])
   
   table.insert(SDC.CraftList,
     {
@@ -511,6 +511,9 @@ function SDC.QuestUpdate()
       end
     end
   end
+  
+  --Bank Operating
+  if SDC.Banking then SDC.BankProcess() end
   
   --Bar Display
   local Display = " "

@@ -259,7 +259,7 @@ function SDC.RepeatOpen()
   EVENT_MANAGER:UnregisterForUpdate("SDCRepeating") --Stop repeat
   EVENT_MANAGER:RegisterForUpdate("SDCLastCheck", 500, SDC.RepeatOpen)
   LastCheck = LastCheck + 1
-  if LastCheck == 6 then
+  if LastCheck == 3 then
     EVENT_MANAGER:UnregisterForUpdate("SDCLastCheck")
     LastCheck = 0
     SDC.DD(19)
