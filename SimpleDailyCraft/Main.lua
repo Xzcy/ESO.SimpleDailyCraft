@@ -355,6 +355,7 @@ function SDC.HandleCook(IsMaster, journalQuestIndex, conditionIndex)
   end
   
   --To Recipe Info
+  if not Recipes[ItemId] then return end
   RecipeListIndex, RecipeIndex = unpack(Recipes[ItemId])
   
   table.insert(SDC.CraftList,

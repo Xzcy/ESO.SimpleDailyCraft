@@ -6,7 +6,7 @@ local SDC = SimpleDailyCraft
 SDC.name = "SimpleDailyCraft"
 SDC.title = "SimpleDailyCraft"
 SDC.author = "@MelanAster"
-SDC.version = "0.79"
+SDC.version = "0.80"
 
 --Constant
 SDC.C = {
@@ -215,8 +215,9 @@ SDC.CraftList = {
 ]]
 }
 --The range of getting and finishing quests
+--/script d(GetUnitWorldPosition("player")) -- x, y, z
 SDC.DailyPostion = {  -- To avoid matching strings of interact targets (board and master npc)
-  [19] = {  --Map,x1,z1,x2,z2
+  [19] = {  --Map, small x1, small z1, large x2, large z2
     {246838, 223644, 248835, 226068}, -- Equipment
     {256479, 248304, 258094, 249551}, -- Consumeables
     {275158, 224837, 277244, 227091}, -- Finish
@@ -336,8 +337,8 @@ SDC.DailyPostion = {  -- To avoid matching strings of interact targets (board an
     {144578, 340635, 147706, 342977},
   },
   [816] = {
-    {156138, 98739, 159267, 102336},
-    {154355, 97694, 156530, 100005},
+    {156138,  98739, 159267, 102336},
+    {154355,  97694, 156530, 100005},
     {0,0,0,0},-- No finish there
   },
   [849] = {
@@ -349,6 +350,11 @@ SDC.DailyPostion = {  -- To avoid matching strings of interact targets (board an
     {426311, 308889, 430088, 311157},
     {426311, 308889, 430088, 311157},
     {432720, 308462, 435211, 310703},
+  },
+  [1502] = { --U46
+    {368093, 249825, 368177, 249970},
+    {368093, 249825, 368177, 249970},
+    {368119, 249740, 368268, 249889},
   },
 }
 
