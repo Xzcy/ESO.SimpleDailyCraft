@@ -113,7 +113,7 @@ function SDC.CraftSmith(IsFirst)
   if Table == nil then  --The finish state
     RestMaterial(UsedMaterial)
     ZO_SmithingTopLevelRefinementPanelSlotContainer:SetHidden(false)
-    if SDC.CraftList["Stop"] then return end --When anything wrong, don't close station
+    if SDC.CraftList["Stop"] or SDC.SV.NotClose then return end --When anything wrong, don't close station
     SCENE_MANAGER:Hide("smithing")
     SCENE_MANAGER:Hide("gamepad_smithing_root")
     return
@@ -195,7 +195,7 @@ function SDC.CraftEnchant(IsFirst, ...)
   local Table = SDC.CraftList[1]
   if Table == nil then
     ZO_EnchantingTopLevelRuneSlotContainer:SetHidden(false)
-    if SDC.CraftList["Stop"] then return end
+    if SDC.CraftList["Stop"] or SDC.SV.NotClose then return end
     SCENE_MANAGER:Hide("enchanting")
     SCENE_MANAGER:Hide("gamepad_enchanting_mode")
     return
@@ -298,7 +298,7 @@ function SDC.CraftAlchemy(IsFirst, ...)
   local Table = SDC.CraftList[1]
   if Table == nil then
     ZO_AlchemyTopLevelSlotContainer:SetHidden(false)
-    if SDC.CraftList["Stop"] then return end
+    if SDC.CraftList["Stop"] or SDC.SV.NotClose then return end
     SCENE_MANAGER:Hide("alchemy")
     SCENE_MANAGER:Hide("gamepad_alchemy_mode")
     return
@@ -398,7 +398,7 @@ function SDC.CraftCook(IsFirst)
   local Table = SDC.CraftList[1]
   if Table == nil then
     ZO_ProvisionerTopLevelFilletPanelSlotContainer:SetHidden(false)
-    if SDC.CraftList["Stop"] then return end
+    if SDC.CraftList["Stop"] or SDC.SV.NotClose then return end
     SCENE_MANAGER:Hide("provisioner")
     SCENE_MANAGER:Hide("gamepad_provisioner_root")
     return

@@ -305,6 +305,13 @@ function SDC.BuildMenu()
         getFunc = function() return SDC.SV.MasterCraft end,
         setFunc = function(var) SDC.SV.MasterCraft = var end,
         },
+        { --Not Close
+        type = "checkbox",
+        name = GetString(SI_DIALOG_BUTTON_TEXT_QUIT_FORCE),
+        width = "full",
+        getFunc = function() return not SDC.SV.NotClose end,
+        setFunc = function(var) SDC.SV.NotClose = not var end,
+        },
         {
         type = "divider",
         alpha = 0.2,

@@ -11,6 +11,7 @@ SDC.Default = {
   Window_OffsetX = 0,
   Window_OffsetY = 0,
   --Craft Setting
+  NotClose = false,
   DailyCraft = true,
   MasterCraft = true,
   SmithCraft = true,
