@@ -36,7 +36,7 @@ SDC.Default = {
   AQ = true,
   --Unbox Setting
   OpenBox = true,
-  OpenAnniversary = false,
+  CustomBoxLinks = {},
   --Bank Setting
   Bank = true,
   OpenBank = false,
@@ -82,12 +82,9 @@ local function OnAddOnLoaded(eventCode, addonName)
     SDC.SV.Window_OffsetX,
     SDC.SV.Window_OffsetY
   )
-  
+
   --Initialization for box name
-  SDC.IsHaveName = SDC.ToStringTable(SDC.BoxId)
-  
-  --Disable anniversary unbox when set
-  if not SDC.SV.OpenAnniversary then SDC.IsHaveName[GetItemLinkName(SDC.BoxId[1]):gsub("%^.+", ""):lower()] = false end 
+  SDC.BoxNameDict = SDC.TF.ItemLinksToNameDicts(SDC.BoxLinks, SDC.SV.CustomBoxLinks)
   
   --Register Event
     --Assistant bar info Update
@@ -395,7 +392,7 @@ function SDC.QuestCheck(CurrentType)
     local QuestType = select(10, GetJournalQuestInfo(journalQuestIndex))
     
     --Craft Quests
-    if QuestType == SDC.C.QUEST_TYPE_WRIT then
+    if QuestType == SDC.C.QUEST_TYPE_WRIT or QuestType == SDC.C.QUEST_TYPE_HOLIDAY then
       --Master Writs
       if GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1) then
         local _,_, CraftType = GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1)
@@ -452,7 +449,7 @@ function SDC.QuestUpdate()
   for journalQuestIndex = 1, SDC.C.MAX_NUMBER_QUEST do
     local QuestType = select(10, GetJournalQuestInfo(journalQuestIndex))
     
-    if QuestType == SDC.C.QUEST_TYPE_WRIT then
+    if QuestType == SDC.C.QUEST_TYPE_WRIT or QuestType == SDC.C.QUEST_TYPE_HOLIDAY then
     --Craft quests
       if GetQuestConditionMasterWritInfo(journalQuestIndex, 1, 1) then 
       --Master Writs

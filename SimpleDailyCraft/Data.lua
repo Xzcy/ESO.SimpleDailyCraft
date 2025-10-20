@@ -6,7 +6,7 @@ local SDC = SimpleDailyCraft
 SDC.name = "SimpleDailyCraft"
 SDC.title = "SimpleDailyCraft"
 SDC.author = "@MelanAster"
-SDC.version = "0.80"
+SDC.version = "0.90"
 
 --Constant
 SDC.C = {
@@ -23,6 +23,7 @@ SDC.C = {
   NonUniversalStyle           = false,
   MAX_NUMBER_QUEST            = 25,
   QUEST_TYPE_WRIT             = 4,
+  QUEST_TYPE_HOLIDAY          = 12,
   MAX_NUMBER_CONDITION_INDEX  = 6,
 }
 
@@ -32,7 +33,7 @@ SDC.TF = {
   ToLink = function(itemId)
     return "|H0:item:"..itemId..":30:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h"
   end,
-  
+
   --Number of item still needed for writ requirements
   MissedWritItemNumber = function(journalQuestIndex, conditionIndex)
     local stepIndex = 1
@@ -45,6 +46,62 @@ SDC.TF = {
     local itemFilter = GetItemLinkFilterTypeInfo(SDC.TF.ToLink(itemId))
     if itemFilter == ITEMFILTERTYPE_CRAFTING then return true end
     return false 
+  end,
+  
+  --Transform item link table to item name dict Table
+  ItemLinksToNameDicts = function(...)
+    local dict = {}
+    local tables = {...}
+    for i = 1, #tables do
+      for j = 1, #tables[i] do
+        local itemName = GetItemLinkName(tables[i][j]):gsub("%^.+", ""):lower()
+        dict[itemName] = true
+      end
+    end
+    return dict
+  end,
+  
+  --List link of box in bag
+  BagBoxList = function()
+    local links = {"/"}
+    local dict = {}
+    for i = 0, GetBagSize(1) do
+      local link = GetItemLink(1, i)
+      if IsItemLinkContainer(link) and not dict[link] then
+        dict[link] = true
+        table.insert(links, link)
+      end
+    end
+    return links
+  end,
+  
+  --List link of custom box
+  CustomBoxList = function()
+    local links = {"/"}
+    for k, v in ipairs(SDC.SV.CustomBoxLinks) do
+      table.insert(links, v)
+    end
+    return links
+  end,
+  
+  --Insert var into table without duplicates
+  TableUpsert = function(t, var)
+    for k, v in pairs(t) do
+      if v == var then return t end
+    end
+    table.insert(t, var)
+    return t
+  end,
+  
+  --Find and delete the first var from table
+  TableDelete = function(t, var)
+    for k, v in pairs(t) do
+      if v == var then
+        table.remove(t, k)
+        return t
+      end
+    end
+    return t
   end,
 }
 
@@ -368,6 +425,10 @@ SDC.MasterPostion = {
   [383] = {
     {252065, 236002, 254335, 238777},
   },
+  -- Solstice daily npc
+  [1502] = {
+    {369582, 309477, 370698, 310606},
+  },
 }
 
 SDC.WritId = { --To get exact name strings of writ item
@@ -412,10 +473,8 @@ SDC.WritId = { --To get exact name strings of writ item
   "|H0:item:119693:30:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
 }
 
-SDC.BoxId = { --To get exact name strings of boxes
-  --Anniversary
-  "|H1:item:194428:123:1:0:0:0:2024:0:0:0:0:0:0:0:1:0:0:1:0:0:0|h|h",
-  -----------------------BlackSmith-----------------------
+SDC.BoxLinks = { --To get exact name strings of boxes
+  -----------------------BlackSmith 1-----------------------
   --Big 铁匠的木箱 I~X
   "|H0:item:57851:30:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:58131:30:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
@@ -439,7 +498,7 @@ SDC.BoxId = { --To get exact name strings of boxes
   "|H0:item:142141:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:142142:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:142174:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
-  -----------------------Cloth-----------------------
+  -----------------------Cloth 2-----------------------
   --Big cloth 制衣匠的背包（布料）I~X
   "|H0:item:58519:30:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:58520:30:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
@@ -560,4 +619,11 @@ SDC.BoxId = { --To get exact name strings of boxes
   "|H0:item:142172:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:142173:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:147603:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
+  -----------------------Solstice Box-----------------------
+  "|H0:item:219792:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
+  "|H0:item:219794:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
+  "|H0:item:219796:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
+  "|H0:item:219790:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
+  "|H0:item:219798:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
+  "|H0:item:219800:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
 }

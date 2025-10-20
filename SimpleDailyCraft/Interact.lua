@@ -62,7 +62,7 @@ function SDC.InteractCore(scene, _, newstate)
   if scene.name ~= "interact" then return end
   if newstate == SCENE_HIDING then  --When leave interact
     SDC.InteractEnd()
-    for i = 1, #SDC.AbandonList do  --Abondeon quest should not pick up
+    for i = 1, #SDC.AbandonList do  --Abondon quest should not pick up
       AbandonQuest(SDC.AbandonList[i])
     end
     return
@@ -149,7 +149,7 @@ function SDC.InteractChatter()
       end
       return
     end
-    if Type == 10000 then --Done with craft board
+    if Type == 10000 or Type == 100 then --Done with craft board / Solstice daily npc
       INTERACTION:CloseChatter()  --Close window
     else
       SelectChatterOption(1)  --Click option 1
@@ -176,7 +176,7 @@ function SDC.InteractChatter()
       end
       return
     end
-    if Type == 10000 then --Done with craft board
+    if Type == 10000 or Type == 100 then --Done with craft board / Solstice daily npc
       GAMEPAD_INTERACTION:CloseChatter()  --Close window
     else
       SelectChatterOption(1)  --Click option 1
@@ -199,22 +199,19 @@ end
 ----Box opening-----
 --------------------
 
---ItemLink to ItemName
-function SDC.ToStringTable(Table)
-  local Tep = {}
-  for i = 1, #Table do
-    Tep[GetItemLinkName(Table[i]):gsub("%^.+", ""):lower()] = true
-  end
-  return Tep
-end
-
 --Treat info from EVENT_LOOT_RECEIVED
 function SDC.OpenBox(_, BagId, SlotId, IsNew, _, _, NumChange)
-  if not SDC.SV.OpenBox then return end
   --Check what update
   if BagId ~= 1 or NumChange < 1 then return end
+  --Update Custom Box Add Setting
+  if SDC_LAM_CUSTOM_ADD then 
+    SDC_LAM_CUSTOM_ADD.data.choices = SDC.TF.BagBoxList()
+    SDC_LAM_CUSTOM_ADD:UpdateChoices()
+  end
+  --Check Setting
+  if not SDC.SV.OpenBox then return end
   --Check target
-  if not SDC.IsHaveName[GetItemName(BagId, SlotId):gsub("%^.+", ""):lower()] then return end
+  if not SDC.BoxNameDict[GetItemName(BagId, SlotId):gsub("%^.+", ""):lower()] then return end
   EVENT_MANAGER:RegisterForUpdate("SDCWait", 50, SDC.OpenWait)
 end
 
@@ -236,7 +233,7 @@ function SDC.RepeatOpen()
   end
   for i = 0, GetBagSize(1) do
     local ItemName = GetItemName(1, i):gsub("%^.+", ""):lower() or 0
-    if SDC.IsHaveName[ItemName] then
+    if SDC.BoxNameDict[ItemName] then
       --Have item to open
       LastCheck = 0
       EVENT_MANAGER:RegisterForUpdate("SDCRepeating", 240, SDC.RepeatOpen)
@@ -279,7 +276,7 @@ function SDC.LootAll(scene, _, newstate)
   end
   if not control then return end
 
-  if SDC.IsHaveName[control:GetText():lower()] then
+  if SDC.BoxNameDict[control:GetText():lower()] then
     LootAll()
     SCENE_MANAGER:Hide("loot")
     SCENE_MANAGER:Hide("inventory")

@@ -367,22 +367,72 @@ function SDC.BuildMenu()
         getFunc = function() return SDC.SV.OpenBox end,
         setFunc = function(var) 
           SDC.SV.OpenBox = var
-          SDC_LAM_Check2.data.disabled = not SDC.SV.OpenBox
-          SDC_LAM_Check2:UpdateDisabled()
         end,
         },
-        { --Anniversary box
-        type = "checkbox",
-        name = SDC.BoxId[1], 
+        {
+        type = "button",
+        name = GetString(SI_LEVEL_UP_REWARDS_OPEN_CLAIM_SCREEN_TEXT),
+        func = function() EVENT_MANAGER:RegisterForUpdate("SDCWait", 50, SDC.OpenWait) end,
         width = "half",
-        disabled = function() return not SDC.SV.OpenBox end,
-        getFunc = function() return SDC.SV.OpenAnniversary end,
-        setFunc = function(var) 
-          SDC.SV.OpenAnniversary = var
-          SDC.IsHaveName = SDC.ToStringTable(SDC.BoxId)
-          if not SDC.SV.OpenAnniversary then SDC.IsHaveName[GetItemLinkName(SDC.BoxId[1]):gsub("%^.+", ""):lower()] = false end
+        reference = "SDC_LAM_BOX_CLAIM",
+        },
+        { --Add
+        type = "dropdown",
+        name = GetString(SI_GRAPHICSPRESETS7).." ("..GetString(SI_ITEM_ACTION_ADD_TO_CRAFT)..")", 
+        choices = SDC.TF.BagBoxList(),
+        tooltip = GetString(SI_PROMPT_TITLE_REMOVE_ITEMS_FROM_CRAFT_BAG).." ("..GetString(SI_GAMEPAD_INVENTORY_STACK_COUNT_BAG_BACKPACK)..")",
+        scrollable = true,
+        getFunc = function() return "/" end,
+        setFunc = function(var)
+          if var ~= "/" then
+            SDC.TF.TableUpsert(SDC.SV.CustomBoxLinks, var)
+            SDC.BoxNameDict = SDC.TF.ItemLinksToNameDicts(SDC.BoxLinks, SDC.SV.CustomBoxLinks)
+            SDC_LAM_CUSTOM_BOX:UpdateValue()
+            SDC_LAM_CUSTOM_REMOVE.data.choices = SDC.TF.CustomBoxList()
+            SDC_LAM_CUSTOM_REMOVE:UpdateChoices()
+          end
         end,
-        reference = "SDC_LAM_Check2"
+        width = "half",
+        reference = "SDC_LAM_CUSTOM_ADD",
+        },
+        { --Remove
+        type = "dropdown",
+        name = GetString(SI_GRAPHICSPRESETS7).." ("..GetString(SI_ITEM_ACTION_REMOVE_FROM_CRAFT)..")", 
+        choices = SDC.TF.CustomBoxList(),
+        scrollable = true,
+        getFunc = function() return "/" end,
+        setFunc = function(var)
+          if var ~= "/" then
+            SDC.TF.TableDelete(SDC.SV.CustomBoxLinks, var)
+            SDC.BoxNameDict = SDC.TF.ItemLinksToNameDicts(SDC.BoxLinks, SDC.SV.CustomBoxLinks)
+            SDC_LAM_CUSTOM_BOX:UpdateValue()
+            SDC_LAM_CUSTOM_REMOVE.data.choices = SDC.TF.CustomBoxList()
+            SDC_LAM_CUSTOM_REMOVE:UpdateChoices()
+          end
+        end,
+        width = "half",
+        reference = "SDC_LAM_CUSTOM_REMOVE",
+        },
+        {
+          type = "divider",
+        },
+        { --Custom Box Lists
+          type = "description",
+          title = GetString(SI_ITEMTYPE18).." ("..GetString(SI_GRAPHICSPRESETS7)..")",
+          text = function() return table.concat(SDC.SV.CustomBoxLinks, ", ") end,
+          width = "full",
+          enableLinks = true,
+          reference = "SDC_LAM_CUSTOM_BOX",
+        },
+        {
+          type = "divider",
+        },
+        {
+          type = "description",
+          title = GetString(SI_ITEMTYPE18).." ("..GetString(SI_AUDIO_OPTIONS_INTRO_MUSIC_DEFAULT)..")",
+          text = function() return table.concat(SDC.BoxLinks, ", ") end,
+          width = "full",
+          enableLinks = true,
         },
       },
     },
