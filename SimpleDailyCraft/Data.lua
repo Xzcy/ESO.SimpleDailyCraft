@@ -6,7 +6,7 @@ local SDC = SimpleDailyCraft
 SDC.name = "SimpleDailyCraft"
 SDC.title = "SimpleDailyCraft"
 SDC.author = "@MelanAster"
-SDC.version = "0.90"
+SDC.version = "0.92"
 
 --Constant
 SDC.C = {
@@ -619,6 +619,7 @@ SDC.BoxLinks = { --To get exact name strings of boxes
   "|H0:item:142172:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:142173:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:147603:31:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
+--[[
   -----------------------Solstice Box-----------------------
   "|H0:item:219792:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:219794:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
@@ -626,4 +627,5 @@ SDC.BoxLinks = { --To get exact name strings of boxes
   "|H0:item:219790:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:219798:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
   "|H0:item:219800:5:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0|h|h",
+]]
 }

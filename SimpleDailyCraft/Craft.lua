@@ -217,8 +217,8 @@ function SDC.CraftEnchant(IsFirst, ...)
     return
   end
   --To fix the bug of sound play wrong sometime
-  ENCHANTING.aspectLength, ENCHANTING.essenceLength, ENCHANTING.potencyLength = 1000, 1000, 1000 
-  CraftEnchantingItem(pBag, pSlot, eBag, eSlot, aBag, aSlot)
+  ENCHANTING.aspectLength, ENCHANTING.essenceLength, ENCHANTING.potencyLength = 1000, 1000, 1000
+  CraftEnchantingItem(pBag, pSlot, eBag, eSlot, aBag, aSlot, Table["Craft"][4])
 end
 
 --Alchemy

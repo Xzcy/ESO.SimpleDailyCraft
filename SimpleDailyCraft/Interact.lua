@@ -203,11 +203,6 @@ end
 function SDC.OpenBox(_, BagId, SlotId, IsNew, _, _, NumChange)
   --Check what update
   if BagId ~= 1 or NumChange < 1 then return end
-  --Update Custom Box Add Setting
-  if SDC_LAM_CUSTOM_ADD then 
-    SDC_LAM_CUSTOM_ADD.data.choices = SDC.TF.BagBoxList()
-    SDC_LAM_CUSTOM_ADD:UpdateChoices()
-  end
   --Check Setting
   if not SDC.SV.OpenBox then return end
   --Check target

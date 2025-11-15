@@ -382,7 +382,11 @@ function SDC.BuildMenu()
         choices = SDC.TF.BagBoxList(),
         tooltip = GetString(SI_PROMPT_TITLE_REMOVE_ITEMS_FROM_CRAFT_BAG).." ("..GetString(SI_GAMEPAD_INVENTORY_STACK_COUNT_BAG_BACKPACK)..")",
         scrollable = true,
-        getFunc = function() return "/" end,
+        getFunc = function() 
+          SDC_LAM_CUSTOM_ADD.data.choices = SDC.TF.BagBoxList()
+          SDC_LAM_CUSTOM_ADD:UpdateChoices()
+          return "/"
+        end,
         setFunc = function(var)
           if var ~= "/" then
             SDC.TF.TableUpsert(SDC.SV.CustomBoxLinks, var)
