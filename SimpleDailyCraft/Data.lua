@@ -6,7 +6,7 @@ local SDC = SimpleDailyCraft
 SDC.name = "SimpleDailyCraft"
 SDC.title = "SimpleDailyCraft"
 SDC.author = "@MelanAster"
-SDC.version = "0.92"
+SDC.version = "0.93"
 
 --Constant
 SDC.C = {
@@ -102,6 +102,21 @@ SDC.TF = {
       end
     end
     return t
+  end,
+  
+  --Abandon Solstice Daily Quset
+  AbandonSolsticeQuest = function()
+    for journalQuestIndex = 1, SDC.C.MAX_NUMBER_QUEST do
+      local QuestType = select(10, GetJournalQuestInfo(journalQuestIndex))
+      if QuestType == SDC.C.QUEST_TYPE_HOLIDAY then
+        for conditionIndex = 1, SDC.C.MAX_NUMBER_CONDITION_INDEX do 
+          local ItemId, MaterialId, CraftType = GetQuestConditionItemInfo(journalQuestIndex, 1, conditionIndex)
+          if CraftType ~= 0 and ItemId ~= 0 then
+            AbandonQuest(journalQuestIndex)
+          end
+        end
+      end
+    end
   end,
 }
 
@@ -425,7 +440,9 @@ SDC.MasterPostion = {
   [383] = {
     {252065, 236002, 254335, 238777},
   },
-  -- Solstice daily npc
+}
+
+SDC.SolsticePosition = {
   [1502] = {
     {369582, 309477, 370698, 310606},
   },

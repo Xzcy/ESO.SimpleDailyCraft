@@ -34,6 +34,8 @@ SDC.Default = {
   PQ = true,
   EQ = true,
   AQ = true,
+  SolsticeAuto = true,
+  SolsticeRapid = true,
   --Unbox Setting
   OpenBox = true,
   CustomBoxLinks = {},
@@ -106,6 +108,7 @@ local function OnAddOnLoaded(eventCode, addonName)
   EVENT_MANAGER:RegisterForEvent("SDCBank", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, SDC.BankProcess)
   EVENT_MANAGER:RegisterForEvent(SDC.name, EVENT_QUEST_OFFERED, SDC.InteractEvent)
   EVENT_MANAGER:RegisterForEvent(SDC.name, EVENT_QUEST_COMPLETE_DIALOG, SDC.InteractEvent)
+  EVENT_MANAGER:RegisterForEvent(SDC.name, EVENT_COMBAT_EVENT, SDC.SolsticeRapidAbandon)
   --]]
   
   --Register Callback

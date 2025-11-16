@@ -199,24 +199,27 @@ function SDC.BuildMenu()
 		name = GetString(SI_COLLECTIBLE_ACTION_ACCEPT_QUEST).." / "..GetString(SI_QUEST_COMPLETE_CONFIRM_TITLE),
     reference = "SDC_Quest",
 		controls = {
-        { --QuestAuto
-        type = "checkbox",
-        name = "|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t|t25:25:esoui/art/icons/master_writ_alchemy.dds|t "..GetString(SI_BINDING_NAME_AUTORUN),
-        tooltip = GetString(SI_TIMEDACTIVITYTYPE0).." / "..GetString(SI_ITEMTYPE60),
-        width = "half",
-        getFunc = function() return SDC.SV.QuestAuto end,
-        setFunc = function(var) SDC.SV.QuestAuto = var end,
-        },
         { --QuestDelay
         type = "slider",
         name = GetString(SI_KEYBINDINGS_CATEGORY_INTERACTION).." (ms)", 
         getFunc = function() return SDC.SV.QuestDelay end,
         setFunc = function(var) SDC.SV.QuestDelay = var end,
-        width = "half",
+        width = "full",
         min = 50,
         max = 800,
         step = 10,
         warning = GetString(SI_INTERFACE_OPTIONS_FADE_RATE_FAST).." <- 200ms -> "..GetString(SI_INTERFACE_OPTIONS_FADE_RATE_SLOW),
+        },
+        {
+        type = "header",
+        name = GetString(SI_TIMEDACTIVITYTYPE0).." / "..GetString(SI_ITEMTYPE60),
+        },
+        { --Daily craft or Master Quest Auto
+        type = "checkbox",
+        name = "|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t|t25:25:esoui/art/icons/master_writ_alchemy.dds|t "..GetString(SI_BINDING_NAME_AUTORUN),
+        width = "full",
+        getFunc = function() return SDC.SV.QuestAuto end,
+        setFunc = function(var) SDC.SV.QuestAuto = var end,
         },
         {
         type = "divider",
@@ -270,6 +273,28 @@ function SDC.BuildMenu()
         width = "half",
         getFunc = function() return SDC.SV.AQ end,
         setFunc = function(var) SDC.SV.AQ = var end,
+        },
+        {
+        type = "header",
+        name = GetString(SI_CHAPTER9),
+        },
+        { --Solstice Daily
+        type = "checkbox",
+        name = "|t25:25:esoui/art/journal/gamepad/gp_questtypeicon_repeatable.dds|t "..GetString(SI_BINDING_NAME_AUTORUN),
+        width = "full",
+        getFunc = function() return SDC.SV.SolsticeAuto end,
+        setFunc = function(var) SDC.SV.SolsticeAuto = var end,
+        },
+        { --Solstice Rapid Switch
+        type = "checkbox",
+        name = "["..GetString(SI_BINDING_NAME_SPECIAL_MOVE_BLOCK).."] -> "..GetString(SI_PROMPT_TITLE_ABANDON_QUEST),
+        tooltip = GetString(SI_CHECK_BUTTON_ON)..": "..GetString(SI_COLLECTIBLE_ACTION_ACCEPT_QUEST).." -> "..GetString(SI_DIALOG_EXIT).."\r\n  ( -> "..
+                  GetString(SI_BINDING_NAME_SPECIAL_MOVE_BLOCK).." -> "..GetString(SI_PROMPT_TITLE_ABANDON_QUEST).." ) \r\n  -> "..
+                  GetString(SI_GAMECAMERAACTIONTYPE2).." -> "..GetString(SI_QUEST_COMPLETE_CONFIRM_TITLE).."\r\n\r\n"..
+                  GetString(SI_CHECK_BUTTON_OFF)..": "..GetString(SI_COLLECTIBLE_ACTION_ACCEPT_QUEST).." -> "..GetString(SI_QUEST_COMPLETE_CONFIRM_TITLE),
+        width = "full",
+        getFunc = function() return SDC.SV.SolsticeRapid end,
+        setFunc = function(var) SDC.SV.SolsticeRapid = var end,
         },
       },
     },

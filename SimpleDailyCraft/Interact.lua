@@ -51,40 +51,72 @@ end
 ------------------
 ----Quest Part----
 ------------------
-
 SDC.AbandonList = {}
 local OldInterFun1 = INTERACTION.UpdateChatterOptions
 local OldInterFun2 = GAMEPAD_INTERACTION.UpdateChatterOptions
 
 --Treat info with Callback "SceneStateChanged"
 function SDC.InteractCore(scene, _, newstate)
-  if not SDC.SV.QuestAuto then return end
   if scene.name ~= "interact" then return end
-  if newstate == SCENE_HIDING then  --When leave interact
+
+  --When leave interact window
+  if newstate == SCENE_HIDING then  
     SDC.InteractEnd()
     for i = 1, #SDC.AbandonList do  --Abondon quest should not pick up
       AbandonQuest(SDC.AbandonList[i])
     end
     return
   end
+  
+  --When open interact window
   if newstate ~= SCENE_SHOWN then return end
+
+  -- Accept Master writ quests
   if IsMasterWrit(GetUnitName("interact"):gsub("%^.+", ""):lower()) then 
     SDC.Announce(false)
-    AcceptOfferedQuest() -- Accept Master writ quests
+    AcceptOfferedQuest() 
     return
   end
-  --Get or finish quests region
-  local Pase = false
+
+  --Get position of player, and info of interact target 
   local Map, x, _, z = GetUnitWorldPosition("player")
-  if InRange(x, z, SDC.DailyPostion[Map]) and GetUnitLevel("interact") == 0 then --To ensure the interact target (quest board/finish box) 
-    Pase = true
+  local unitLevel = GetUnitLevel("interact")
+  local unitCaption = GetUnitCaption("interact")
+  local unitGender = GetUnitGender("interact")
+
+  --Should work?
+  local Pase = false
+  if SDC.SV.QuestAuto then
+    --Daily accept/finish region
+    if InRange(x, z, SDC.DailyPostion[Map]) then
+      if unitLevel == 0 then
+        Pase = true
+      end
+    end
+    --Finish master writs region
+    if InRange(x, z, SDC.MasterPostion[Map]) then
+      if unitLevel == 50 and unitCaption ~= nil and unitGender == 2 then
+        if not IsInteractingWithMyAssistant() then
+          --Record name
+          SDC.MasterNpcName = GetUnitName("interact"):gsub("%^.+", "") 
+          Pase = true
+        end
+      end
+    end
   end
-  --Finish master writs region
-  if InRange(x, z, SDC.MasterPostion[Map]) and GetUnitLevel("interact") == 50 and GetUnitCaption("interact") ~= nil and GetUnitGender("interact") == 2 and not IsInteractingWithMyAssistant() then
-    SDC.MasterNpcName = GetUnitName("interact"):gsub("%^.+", "") --Record its name
-    Pase = true
+  --Solstice region
+  if SDC.SV.SolsticeAuto then
+    if InRange(x, z, SDC.SolsticePosition[Map]) then
+      if unitLevel == 50 and unitCaption ~= nil and unitGender == 2 then
+        if not IsInteractingWithMyAssistant() then
+          Pase = true
+        end
+      end
+    end
   end
+  --Should work?
   if not Pase then return end
+
   --EVENT_MANAGER:RegisterForEvent(SDC.name, EVENT_CHATTER_BEGIN, SDC.InteractDelay)
   INTERACTION.UpdateChatterOptions = function(...)  --To ensure SDC click after eso finishing updating chatter
       local Result = OldInterFun1(...)
@@ -103,15 +135,6 @@ function SDC.InteractCore(scene, _, newstate)
   return
 end
 
---To get/finish quest
-function SDC.InteractEvent(_, Index)
-  if Index then
-    zo_callLater(CompleteQuest, 50)
-  else
-    zo_callLater(AcceptOfferedQuest, 50)
-  end
-end
-
 --Delay after chatter begin
 function SDC.InteractDelay()
   local Type
@@ -127,9 +150,35 @@ function SDC.InteractDelay()
   end
 end
 
+local forceExit = false
+--To get/finish quest
+function SDC.InteractEvent(_, Index)
+  if Index then
+    zo_callLater(CompleteQuest, 50)
+  else
+    zo_callLater(function()
+      --Special for Solstice daily quest
+      if SDC.SV.SolsticeRapid then
+        local Map, x, _, z = GetUnitWorldPosition("player")
+        if InRange(x, z, SDC.SolsticePosition[Map]) then
+          forceExit = true
+          EVENT_MANAGER:RegisterForUpdate("SDCSolsticeRapid", 100, SDC.SolsticeRapidAbandon)
+        end
+      end
+      AcceptOfferedQuest()
+    end, 50)
+  end
+end
+
 --Repeat choosing the top chatter, until leave or is shop
 function SDC.InteractChatter()
   local Type --The type of option 1
+  if forceExit then
+    INTERACTION:CloseChatter()
+    GAMEPAD_INTERACTION:CloseChatter()
+    forceExit = false
+    return
+  end
   if SCENE_MANAGER:IsShowing("interact") then
     --PC Part
     local control = WINDOW_MANAGER:GetControlByName("ZO_ChatterOption1")
@@ -170,16 +219,20 @@ function SDC.InteractChatter()
         GAMEPAD_INTERACTION.itemList:AddEntry("ZO_ChatterOption_Gamepad", entry)
         GAMEPAD_INTERACTION:FinalizeChatterOptions(3)
       end
-      SDC.IsCommit = false 
-      if SDC.RunList[1] or SDC.LastRound then --In WW-SDC work state
+      SDC.IsCommit = false
+      --In WW-SDC work state
+      if SDC.RunList[1] or SDC.LastRound then 
         GAMEPAD_INTERACTION:CloseChatter()
       end
       return
     end
-    if Type == 10000 or Type == 100 then --Done with craft board / Solstice daily npc
-      GAMEPAD_INTERACTION:CloseChatter()  --Close window
+    --Done with craft board / Solstice daily npc
+    if Type == 10000 or Type == 100 then 
+      --Close window
+      GAMEPAD_INTERACTION:CloseChatter()  
     else
-      SelectChatterOption(1)  --Click option 1
+      --Click option 1
+      SelectChatterOption(1)  
     end
     --Gamepad Part
   end
@@ -193,6 +246,26 @@ function SDC.InteractEnd()
   EVENT_MANAGER:UnregisterForEvent(SDC.name, EVENT_QUEST_OFFERED)
   EVENT_MANAGER:UnregisterForEvent(SDC.name, EVENT_QUEST_COMPLETE_DIALOG)
   SDC.Announce(true)
+end
+
+--Rapid Abandon Solstice Quest by interrupt
+function SDC.SolsticeRapidAbandon()
+  --Setting Check
+  if not SDC.SV.SolsticeRapid then
+    EVENT_MANAGER:UnregisterForUpdate("SDCSolsticeRapid")
+    return
+  end
+  --Position Check
+  local Map, x, _, z = GetUnitWorldPosition("player")
+  if not InRange(x, z, SDC.SolsticePosition[Map]) then
+    EVENT_MANAGER:UnregisterForUpdate("SDCSolsticeRapid")
+    return
+  end
+  --Blocking Check
+  if IsBlockActive() then
+    SDC.TF.AbandonSolsticeQuest()
+    EVENT_MANAGER:UnregisterForUpdate("SDCSolsticeRapid")
+  end
 end
 
 --------------------
